@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Medical Insight Analyzer</title>
+<style>
+  /* --- Global Reset --- */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    font-family: "Inter", sans-serif;
+    color: #fff;
+    background: linear-gradient(135deg, #0a0a0a, #111);
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  h1 {
+    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #00fff7, #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  p.subtitle {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    color: #aaa;
+    text-align: center;
+    max-width: 720px;
+  }
+
+  .nav-links {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+  .nav-links a {
+    margin-left: 1rem;
+    color: #00fff7;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .nav-links a:hover { text-decoration: underline; cursor: pointer; }
+
+  .container {
+    width: 100%;
+    max-width: 720px;
+    background: #111;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    box-shadow: 0 12px 42px rgba(0,255,247,0.2);
+    animation: lift-in 0.7s ease both;
+  }
+
+  @keyframes lift-in {
+    from { opacity: 0; transform: translateY(20px);}
+    to { opacity: 1; transform: translateY(0);}
+  }
+
+  .input-box {
+    border: 2px dashed #00fff7;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    background: #111;
+    cursor: pointer;
+    text-align: center;
+  }
+  .input-box:hover { background: #222; border-color: #00aaff; }
+  input[type="file"] {
+    width: 100%;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+    color: #fff;
+  }
+
+  button {
+    width: 100%;
+    padding: 0.9rem;
+    margin-top: 1rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0a0a0a;
+    background: #00fff7;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,255,247,0.5);}
+  button:active { transform: translateY(-1px); }
+
+  #loader {
+    display: none;
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: #00fff7;
+  }
+  .dot { animation: blink 1.4s infinite both; margin-left: 3px; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100% { opacity: 0; } 40% { opacity: 1; } }
+
+  #result {
+    display: none;
+    width: 100%;
+    max-width: 720px;
+    margin-top: 2rem;
+    background: #111;
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 40px rgba(0,255,247,0.2);
+    line-height: 1.7;
+    animation: fade-up 0.6s ease both;
+    color: #fff;
+    word-wrap: break-word;
+  }
+  @keyframes fade-up { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+
+  #result h2 { color: #00fff7; margin-bottom: 1rem; }
+  #result strong { color: #00fff7; font-weight: 700; }
+  #result em { font-style: italic; color: #ccc; }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    h1 { font-size: 1.8rem; }
+    p.subtitle { font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav-links" id="navLinks"></div>
+
+<h1>AI Medical Insight Analyzer</h1>
+<p class="subtitle">Upload any medical report (PDF, image, DOCX, text) and get AI-powered insights.</p>
+
+<div class="container">
+  <form id="uploadForm" enctype="multipart/form-data">
+    <label class="input-box">
+      <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.png,.jpeg,.docx,.txt" required />
+    </label>
+    <button type="button" id="analyzeBtn">Analyze Report</button>
+  </form>
+  <div id="loader">Analyzing<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>
+</div>
+
+<div id="result"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const resultDiv = document.getElementById('result');
+  const loader = document.getElementById('loader');
+  const fileInput = document.getElementById('fileInput');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const navLinks = document.getElementById('navLinks');
+
+  // --- Manage login state ---
+  function updateNavLinks() {
+  const token = localStorage.getItem('token');
+  navLinks.innerHTML = '';
+
+  if (token) {
+    const logoutLink = document.createElement('a');
+    logoutLink.textContent = 'Logout';
+    logoutLink.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      // redirect to landing page after logout
+      window.location.href = 'landing.html';   // ⬅ CHANGE THIS
+    });
+    navLinks.appendChild(logoutLink);
+
+  } else {
+    const loginLink = document.createElement('a');
+    loginLink.href = 'login.html';
+    loginLink.textContent = 'Login';
+
+    const signupLink = document.createElement('a');
+    signupLink.href = 'signup.html';
+    signupLink.textContent = 'Signup';
+
+    navLinks.appendChild(loginLink);
+    navLinks.appendChild(signupLink);
+  }
+}
+
+updateNavLinks();
+
+
+  function cleanInsight(text) {
+    let clean = text.replace(/<(\/?)(?:strong|em)>|[rn]?>/g, '');
+    clean = clean.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                 .replace(/\*(.*?)\*/g, "<em>$1</em>");
+    clean = clean.split(/\n{2,}/).map(para => `<p>${para.trim()}</p>`).join('');
+    return clean;
+  }
+
+  analyzeBtn.addEventListener('click', async () => {
+    resultDiv.innerHTML = '';
+    resultDiv.style.display = 'none';
+    loader.style.display = 'block';
+
+    if (!fileInput.files[0]) { 
+      alert("Please select a file first."); 
+      loader.style.display = 'none'; 
+      return; 
+    }
+    const token = localStorage.getItem("token");
+    if (!token) { 
+      alert("No token found. Please login first."); 
+      window.location.href = 'login.html';
+      return; 
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    try {
+      const response = await fetch("http://localhost:3000/analyze", {
+        method: 'POST',
+        headers: { "Authorization": token },
+        body: formData
+      });
+      
+      const data = await response.json();
+      loader.style.display = 'none';
+
+      if (data.insight) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `<h2>AI Medical Insight</h2>` + cleanInsight(data.insight);
+      } else {
+        alert("No insight returned.");
+      }
+
+    } catch (err) {
+      loader.style.display = 'none';
+      console.error(err);
+      resultDiv.innerHTML = '<strong style="color:red;">❌ Error analyzing file.</strong>';
+      resultDiv.style.display = 'block';
+    }
+  });
+});
+</script>
+
+</body>
+</html>

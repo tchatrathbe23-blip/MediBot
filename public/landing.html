@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Medical Insight Analyzer</title>
+<style>
+  /* --- Global Reset --- */
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+  body {
+    background-color: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    font-size: 3rem;
+    color: #00fff7;
+    text-shadow: 0 0 10px #00fff7, 0 0 20px #00fff7, 0 0 30px #00fff7;
+    margin-bottom: 1rem;
+  }
+
+  p.subtitle {
+    font-size: 1.1rem;
+    color: #ccc;
+    margin-bottom: 2rem;
+  }
+
+  .btn {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid #00fff7;
+    border-radius: 0.75rem;
+    background: transparent;
+    color: #00fff7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 0 10px #00fff7, 0 0 20px #00fff7 inset;
+  }
+
+  .btn:hover {
+    background: #00fff7;
+    color: #0a0a0a;
+    box-shadow: 0 0 20px #00fff7, 0 0 30px #00fff7 inset;
+    transform: scale(1.05);
+  }
+
+  .features {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 800px;
+    text-align: left;
+  }
+
+  .feature {
+    background: #111;
+    border-left: 4px solid #00fff7;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 15px rgba(0, 255, 247, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .feature:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 25px rgba(0, 255, 247, 0.4);
+  }
+
+  .feature h3 {
+    color: #00fff7;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature p {
+    color: #aaa;
+  }
+
+  footer {
+    margin-top: 4rem;
+    color: #555;
+    font-size: 0.9rem;
+  }
+
+  @media (min-width: 768px) {
+    .features {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<h1>AI Medical Insight Analyzer</h1>
+<p class="subtitle">Upload any medical report and let AI summarize it clearly and professionally. <br>Login first to get access to the analyzer.</p>
+
+<a href="login.html" class="btn">Login to Get Started</a>
+
+<div class="features">
+  <div class="feature">
+    <h3>🚀 Instant Analysis</h3>
+    <p>Upload your PDF, DOCX, image, or text reports and get clear AI-powered insights in seconds.</p>
+  </div>
+  <div class="feature">
+    <h3>🧠 AI-Powered</h3>
+    <p>Our AI analyzes complex medical reports and summarizes them into easy-to-understand insights.</p>
+  </div>
+  <div class="feature">
+    <h3>🔒 Secure & Private</h3>
+    <p>Your medical data stays safe. Login is required to generate your unique access token for secure requests.</p>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 AI Medical Insight Analyzer. All rights reserved.
+</footer>
+
+</body>
+</html>

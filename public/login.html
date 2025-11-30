@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<!-- Include the shared theme if you created neon-theme.css -->
+<!-- <link rel="stylesheet" href="neon-theme.css"> -->
+
+<style>
+  /* === GLOBAL === */
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+    background: linear-gradient(135deg, #0a0a0a, #111);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* === CARD === */
+  .card {
+    width: 360px;
+    padding: 2rem;
+    background: #111;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 40px rgba(0,255,247,0.2);
+    animation: fade-in 0.6s ease both;
+    text-align: center;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card h2 {
+    background: linear-gradient(90deg, #00fff7, #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* === INPUTS === */
+  input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    background: #1a1a1a;
+    color: #00fff7;
+    font-size: 1rem;
+    border: 2px solid #00aabb;
+    transition: 0.25s;
+  }
+
+  input:focus {
+    border-color: #00fff7;
+    box-shadow: 0 0 10px rgba(0,255,247,0.3);
+  }
+
+  /* === BUTTON === */
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #00fff7;
+    color: #0a0a0a;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,255,247,0.5);
+  }
+
+  /* === LINKS === */
+  p {
+    margin-top: 1rem;
+    color: #ccc;
+  }
+
+  a {
+    color: #00fff7;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h2>Login</h2>
+
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p>New user? <a href="signup.html">Create Account</a></p>
+  </div>
+
+<script>
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("http://localhost:3000/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("name", data.name);
+    window.location.href = "index.html"; // redirect to analyzer page
+  } else {
+    alert(data.message);
+  }
+}
+</script>
+
+</body>
+</html>
