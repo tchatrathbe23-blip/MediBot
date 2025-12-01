@@ -66,7 +66,8 @@
   </div>
 
 <script>
-     const API_BASE = "https://medibot-f3ag.onrender.com";
+const API_BASE = "https://medibot-f3ag.onrender.com";
+
 async function sendOTP() {
   const name = document.getElementById("name").value;
 
@@ -79,9 +80,7 @@ async function sendOTP() {
   const data = await res.json();
 
   if (data.success) {
-    alert("OTP Generated: " + data.otp + "\n(Showed for testing purpose)");
-
-    // Show OTP + new password fields
+    alert("OTP Generated: " + data.otp + "\n(Shown for testing)");
     document.getElementById("resetSection").style.display = "block";
   } else {
     alert(data.message);
@@ -100,7 +99,6 @@ async function resetPassword() {
   });
 
   const data = await res.json();
-  
   alert(data.message);
 
   if (data.success) {

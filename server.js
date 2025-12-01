@@ -217,7 +217,7 @@ app.post("/login", async (req, res) => {
 
 
 
-app.post("/forgot", async (req, res) => {
+app.post("/forgot-password", async (req, res) => {
   try {
     const { name } = req.body;
 
