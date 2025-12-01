@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Forgot Password</title>
+<style>
+  body {
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    font-family: "Inter";
+  }
+
+  .box {
+    width: 360px;
+    padding: 25px;
+    background: #111;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,255,247,0.2);
+  }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    border: 2px solid #00aabb;
+    background: #1a1a1a;
+    border-radius: 10px;
+    color: #00fff7;
+    outline: none;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #00fff7;
+    color: #111;
+    border: none;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+  <div class="box">
+    <h2>Reset Password</h2>
+
+    <!-- STEP 1: ENTER NAME -->
+    <input type="text" id="name" placeholder="Enter your name">
+
+    <button onclick="sendOTP()">Send OTP</button>
+
+    <!-- STEP 2: OTP + NEW PASSWORD -->
+    <div id="resetSection" style="display:none;">
+      <input type="text" id="otp" placeholder="Enter OTP">
+      <input type="password" id="newPassword" placeholder="New password">
+
+      <button onclick="resetPassword()">Reset Password</button>
+    </div>
+  </div>
+
+<script>
+async function sendOTP() {
+  const name = document.getElementById("name").value;
+
+  const res = await fetch("http://localhost:3000/forgot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("OTP Generated: " + data.otp + "\n(Showed for testing purpose)");
+
+    // Show OTP + new password fields
+    document.getElementById("resetSection").style.display = "block";
+  } else {
+    alert(data.message);
+  }
+}
+
+async function resetPassword() {
+  const name = document.getElementById("name").value;
+  const otp = document.getElementById("otp").value;
+  const newPassword = document.getElementById("newPassword").value;
+
+  const res = await fetch("http://localhost:3000/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, otp, newPassword })
+  });
+
+  const data = await res.json();
+  
+  alert(data.message);
+
+  if (data.success) {
+    window.location.href = "login.html";
+  }
+}
+</script>
+
+</body>
+</html>

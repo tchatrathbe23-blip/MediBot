@@ -109,7 +109,6 @@
     <h2>Create Account</h2>
 
     <input id="name" type="text" placeholder="Full Name">
-    <input id="email" type="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
 
     <button onclick="signup()">Signup</button>
@@ -119,14 +118,14 @@
 
 <script>
 async function signup() {
+  
   const name = document.getElementById("name").value;
-  const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   const res = await fetch("http://localhost:3000/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password })
+    body: JSON.stringify({ name, password })
   });
 
   const data = await res.json();

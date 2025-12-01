@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Reports</title>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 20px;
+    }
+    .report-card {
+      background: #111;
+      border-left: 4px solid #00fff7;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .report-card:hover {
+      background: #1a1a1a;
+    }
+    button {
+      padding: 8px 12px;
+      background: #00fff7;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>My Reports</h1>
+<div id="reportList"></div>
+
+<script>
+async function loadReports() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch("http://localhost:3000/my-reports", {
+    headers: { "Authorization": token }
+  });
+
+  const data = await res.json();
+
+  const container = document.getElementById("reportList");
+
+  data.reports.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "report-card";
+
+    card.innerHTML = `
+      <h3>Report from ${new Date(r.createdAt).toLocaleString()}</h3>
+      <button onclick='downloadReport(${JSON.stringify(r.content)})'>Download PDF</button>
+      <button onclick='viewReport(${JSON.stringify(r.content)})'>View</button>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function viewReport(content) {
+  localStorage.setItem("selectedReport", JSON.stringify(content));
+  window.location.href = "view-report.html";
+}
+
+function downloadReport(content) {
+  const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "medical_report.pdf";
+  a.click();
+}
+
+loadReports();
+</script>
+
+</body>
+</html>

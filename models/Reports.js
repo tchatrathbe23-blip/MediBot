@@ -6,4 +6,4 @@ const ReportSchema = new mongoose.Schema({
   createdAt: Date,
 });
 
-module.exports = mongoose.model("Report", ReportSchema);
+module.exports = mongoose.model("Reports", ReportSchema);

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Report</title>
+<style>
+  body {
+    font-family: Inter, sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    padding: 20px;
+  }
+  .box {
+    background: #111;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Report Details</h1>
+
+<div id="report"></div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("selectedReport"));
+
+let html = `
+  <div class="box"><h2>Summary</h2>${data.summary}</div>
+  <div class="box"><h2>Possible Issues</h2><ul>${data.possibleIssues.map(i => `<li>${i}</li>`).join("")}</ul></div>
+  <div class="box"><h2>Recommendations</h2><ul>${data.recommendations.map(r => `<li>${r}</li>`).join("")}</ul></div>
+`;
+
+document.getElementById("report").innerHTML = html;
+</script>
+
+</body>
+</html>

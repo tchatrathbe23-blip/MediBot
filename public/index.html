@@ -1,266 +1,871 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Medical Insight Analyzer</title>
-<style>
-  /* --- Global Reset --- */
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <title>AI Medical Insight Analyzer</title>
+  <style>
+ /* --- Global Reset --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  html, body {
-    height: 100%;
-    width: 100%;
-    font-family: "Inter", sans-serif;
-    color: #fff;
-    background: linear-gradient(135deg, #0a0a0a, #111);
-    overflow-x: hidden;
+html,
+body {
+  height: 100%;
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, #0a0a0a, #111);
+  overflow-x: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+h1 {
+  margin-bottom: 0.5rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #00fff7, #00aaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+p.subtitle {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: #aaa;
+  text-align: center;
+  max-width: 720px;
+}
+
+.nav-links {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.nav-links-left {
+  color: #00fff7;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.nav-links-right a {
+  margin-left: 1rem;
+  color: #00fff7;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-links-right a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 🚀 NEW Layout: main + sidebar (Quick Prompts on the right) */
+.layout {
+  display: flex;
+  width: 100%;
+  max-width: 1100px;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.main-column {
+  flex: 3; /* Takes up 3/4 of the space */
+}
+
+.sidebar {
+  flex: 1; /* Takes up 1/4 of the space */
+  background: #10141a;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 255, 247, 0.14);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.sidebar h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+  color: #00fff7;
+}
+
+.sidebar button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: #151a23;
+  color: #e5f7ff;
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.sidebar button:hover {
+  background: #18263a;
+  transform: translateY(-1px);
+}
+
+/* Upload card */
+.container {
+  width: 100%;
+  background: #111;
+  border-radius: 1.25rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 12px 42px rgba(0, 255, 247, 0.2);
+  /* Removed margin-bottom: 1rem; from the original, as the layout gap handles spacing */
+}
+
+.input-box {
+  border: 2px dashed #00fff7;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+  background: #111;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.input-box:hover {
+  background: #222;
+  border-color: #00aaff;
+}
+
+input[type="file"] {
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  color: #fff;
+}
+
+.primary-btn,
+.secondary-btn {
+  width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-top: 0.35rem;
+}
+
+.primary-btn {
+  color: #0a0a0a;
+  background: #00fff7;
+  box-shadow: 0 8px 25px rgba(0, 255, 247, 0.35);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 255, 247, 0.5);
+}
+
+.secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.secondary-btn {
+  background: #182430;
+  color: #eaf5ff;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 255, 247, 0.25);
+}
+
+/* Detail slider */
+.slider-row {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+}
+
+.slider-label {
+  min-width: 132px;
+  text-align: right;
+  color: #00fff7;
+  font-weight: 500;
+}
+
+#loader {
+  display: none;
+  margin-top: 0.6rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #00fff7;
+}
+
+.dot {
+  animation: blink 1.4s infinite both;
+  margin-left: 3px;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+
+  0%,
+  80%,
+  100% {
+    opacity: 0;
   }
 
-  body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-  }
-
-  h1 {
-    margin-bottom: 0.5rem;
-    font-size: 2.2rem;
-    font-weight: 700;
-    background: linear-gradient(90deg, #00fff7, #00aaff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 0.5px;
-    text-align: center;
-  }
-
-  p.subtitle {
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-    color: #aaa;
-    text-align: center;
-    max-width: 720px;
-  }
-
-  .nav-links {
-    width: 100%;
-    max-width: 720px;
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-  }
-  .nav-links a {
-    margin-left: 1rem;
-    color: #00fff7;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .nav-links a:hover { text-decoration: underline; cursor: pointer; }
-
-  .container {
-    width: 100%;
-    max-width: 720px;
-    background: #111;
-    border-radius: 1.25rem;
-    padding: 2rem;
-    box-shadow: 0 12px 42px rgba(0,255,247,0.2);
-    animation: lift-in 0.7s ease both;
-  }
-
-  @keyframes lift-in {
-    from { opacity: 0; transform: translateY(20px);}
-    to { opacity: 1; transform: translateY(0);}
-  }
-
-  .input-box {
-    border: 2px dashed #00fff7;
-    padding: 1.25rem;
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-    background: #111;
-    cursor: pointer;
-    text-align: center;
-  }
-  .input-box:hover { background: #222; border-color: #00aaff; }
-  input[type="file"] {
-    width: 100%;
-    font-size: 1rem;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    background: none;
-    color: #fff;
-  }
-
-  button {
-    width: 100%;
-    padding: 0.9rem;
-    margin-top: 1rem;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #0a0a0a;
-    background: #00fff7;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,255,247,0.5);}
-  button:active { transform: translateY(-1px); }
-
-  #loader {
-    display: none;
-    margin-top: 1rem;
-    text-align: center;
-    font-size: 1.15rem;
-    font-weight: 500;
-    color: #00fff7;
-  }
-  .dot { animation: blink 1.4s infinite both; margin-left: 3px; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100% { opacity: 0; } 40% { opacity: 1; } }
-
-  #result {
-    display: none;
-    width: 100%;
-    max-width: 720px;
-    margin-top: 2rem;
-    background: #111;
-    padding: 1.75rem;
-    border-radius: 1.25rem;
-    box-shadow: 0 10px 40px rgba(0,255,247,0.2);
-    line-height: 1.7;
-    animation: fade-up 0.6s ease both;
-    color: #fff;
-    word-wrap: break-word;
-  }
-  @keyframes fade-up { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
-
-  #result h2 { color: #00fff7; margin-bottom: 1rem; }
-  #result strong { color: #00fff7; font-weight: 700; }
-  #result em { font-style: italic; color: #ccc; }
-
-  @media (max-width: 768px) {
-    body { padding: 1rem; }
-    h1 { font-size: 1.8rem; }
-    p.subtitle { font-size: 0.95rem; }
-  }
-</style>
-</head>
-<body>
-
-<div class="nav-links" id="navLinks"></div>
-
-<h1>AI Medical Insight Analyzer</h1>
-<p class="subtitle">Upload any medical report (PDF, image, DOCX, text) and get AI-powered insights.</p>
-
-<div class="container">
-  <form id="uploadForm" enctype="multipart/form-data">
-    <label class="input-box">
-      <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.png,.jpeg,.docx,.txt" required />
-    </label>
-    <button type="button" id="analyzeBtn">Analyze Report</button>
-  </form>
-  <div id="loader">Analyzing<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>
-</div>
-
-<div id="result"></div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const resultDiv = document.getElementById('result');
-  const loader = document.getElementById('loader');
-  const fileInput = document.getElementById('fileInput');
-  const analyzeBtn = document.getElementById('analyzeBtn');
-  const navLinks = document.getElementById('navLinks');
-
-  // --- Manage login state ---
-  function updateNavLinks() {
-  const token = localStorage.getItem('token');
-  navLinks.innerHTML = '';
-
-  if (token) {
-    const logoutLink = document.createElement('a');
-    logoutLink.textContent = 'Logout';
-    logoutLink.addEventListener('click', () => {
-      localStorage.removeItem('token');
-      // redirect to landing page after logout
-      window.location.href = 'landing.html';   // ⬅ CHANGE THIS
-    });
-    navLinks.appendChild(logoutLink);
-
-  } else {
-    const loginLink = document.createElement('a');
-    loginLink.href = 'login.html';
-    loginLink.textContent = 'Login';
-
-    const signupLink = document.createElement('a');
-    signupLink.href = 'signup.html';
-    signupLink.textContent = 'Signup';
-
-    navLinks.appendChild(loginLink);
-    navLinks.appendChild(signupLink);
+  40% {
+    opacity: 1;
   }
 }
 
-updateNavLinks();
+/* Result + chat */
+#result-wrapper {
+  background: #111;
+  border-radius: 1.25rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 10px 40px rgba(0, 255, 247, 0.2);
+  margin-top: 1rem;
+}
 
+#result {
+  display: none;
+  line-height: 1.7;
+  word-wrap: break-word;
+}
 
-  function cleanInsight(text) {
-    let clean = text.replace(/<(\/?)(?:strong|em)>|[rn]?>/g, '');
-    clean = clean.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                 .replace(/\*(.*?)\*/g, "<em>$1</em>");
-    clean = clean.split(/\n{2,}/).map(para => `<p>${para.trim()}</p>`).join('');
-    return clean;
+#result h2 {
+  color: #00fff7;
+  margin-bottom: 1rem;
+}
+
+#result strong {
+  color: #00fff7;
+  font-weight: 700;
+}
+
+#result em {
+  font-style: italic;
+  color: #ccc;
+}
+
+/* Chat with your report */
+.chat-panel {
+  margin-top: 1rem;
+  border-top: 1px solid #1b2735;
+  padding-top: 1rem;
+  display: none;
+}
+
+.chat-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.chat-row textarea {
+  flex: 1;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 140px;
+  border-radius: 0.75rem;
+  border: 1px solid #1d2936;
+  background: #080c12;
+  color: #e5f4ff;
+  padding: 0.6rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.chat-send-btn {
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #00fff7;
+  color: #021017;
+  font-weight: 600;
+  cursor: pointer;
+  height: fit-content;
+  align-self: flex-end;
+}
+
+.chat-log {
+  margin-top: 0.6rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.86rem;
+}
+
+.chat-msg {
+  margin-bottom: 0.4rem;
+}
+
+.chat-msg.user {
+  color: #ffd29b;
+}
+
+.chat-msg.ai {
+  color: #c7e9ff;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column; /* Stacks the columns on mobile */
   }
 
-  analyzeBtn.addEventListener('click', async () => {
-    resultDiv.innerHTML = '';
-    resultDiv.style.display = 'none';
-    loader.style.display = 'block';
+  .nav-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
 
-    if (!fileInput.files[0]) { 
-      alert("Please select a file first."); 
-      loader.style.display = 'none'; 
-      return; 
-    }
-    const token = localStorage.getItem("token");
-    if (!token) { 
-      alert("No token found. Please login first."); 
-      window.location.href = 'login.html';
-      return; 
-    }
+  .nav-links-right {
+    align-self: flex-end;
+  }
 
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+  .container,
+  #result-wrapper {
+    padding: 1.25rem 1.4rem;
+  }
+  #detailSlider {
+  display: none;
+}
+.slider-row {
+  display: none !important;
+}
+}
+/* Detail slider */
+.slider-row {
+  /* Hides the entire slider component: labels, input, and progress bar */
+  display: none; 
+}
+/* Previous styles for slider-row (now hidden):
+.slider-row {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+*/
 
-    try {
-      const response = await fetch("http://localhost:3000/analyze", {
-        method: 'POST',
-        headers: { "Authorization": token },
-        body: formData
-      });
-      
-      const data = await response.json();
-      loader.style.display = 'none';
+.slider-row input[type="range"] {
+  flex: 1;
+}
 
-      if (data.insight) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `<h2>AI Medical Insight</h2>` + cleanInsight(data.insight);
-      } else {
-        alert("No insight returned.");
+.slider-label {
+  min-width: 132px;
+  text-align: right;
+  color: #00fff7;
+  font-weight: 500;
+}
+/* ... rest of your CSS ... */
+  </style>
+</head>
+
+<body>
+<div class="nav-links">
+  <div class="nav-links-left">🩺 MediBot – Personal Report Assistant</div>
+  <div class="nav-links-right" id="navLinks"></div>
+</div>
+
+<h1>AI Medical Insight Analyzer</h1>
+<p class="subtitle">
+  Upload your medical report (PDF, image, DOCX, text).
+  You’ll get a friendly explanation, plus optional diet & exercise guidance.
+  <br><strong>Note:</strong> This tool does not provide medical diagnosis or replace your doctor.
+</p>
+
+<!-- 🚀 FIXED LAYOUT START -->
+<div class="layout">
+
+  <!-- MAIN COLUMN -->
+  <div class="main-column">
+
+    <div class="container">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <label class="input-box">
+          <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.png,.jpeg,.docx,.txt" required />
+        </label>
+
+        <button type="button" class="primary-btn" id="analyzeBtn">
+          Analyze Report
+        </button>
+
+        <div class="secondary-grid">
+          <button type="button" class="secondary-btn" id="dietBtn">Diet Plan</button>
+          <button type="button" class="secondary-btn" id="exerciseBtn">Exercise Guidance</button>
+          <button type="button" class="secondary-btn" id="chatToggleBtn">Chat With Your Report</button>
+          <button type="button" class="secondary-btn" id="saveReportBtnMain">Save Report</button>
+        </div>
+
+        <div class="slider-row">
+          <span>Explanation detail:</span>
+          <input type="range" id="detailSlider" min="1" max="5" value="3" />
+          <span class="slider-label" id="detailLabel">Balanced detail</span>
+        </div>
+      </form>
+
+      <div id="loader">
+        Analyzing<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+      </div>
+    </div>
+
+    <!-- Result + chat stays INSIDE main column -->
+    <div id="result-wrapper">
+      <div id="result"></div>
+
+      <div class="chat-panel" id="chatPanel">
+        <h3 style="color:#00fff7; margin-bottom:0.4rem;">💬 Chat with your report</h3>
+        <p style="font-size:0.85rem; color:#a9b7c9;">
+          Ask follow-up questions based on this report (e.g. “Explain the risks in simple words”).
+        </p>
+
+        <div class="chat-row">
+          <textarea id="chatInput" placeholder="Type your question here..."></textarea>
+          <button class="chat-send-btn" id="chatSendBtn">Send</button>
+        </div>
+
+        <div class="chat-log" id="chatLog"></div>
+      </div>
+    </div>
+
+  </div> <!-- END MAIN COLUMN -->
+
+  <!-- SIDEBAR (Now properly on the RIGHT) -->
+  <aside class="sidebar">
+    <h3>✨ Quick follow-up prompts</h3>
+    <button data-preset="summarize">Summarize this report in very simple language</button>
+    <button data-preset="risk">What are the main risks or red-flag points?</button>
+    <button data-preset="checklist">Give me a checklist of questions to ask my doctor</button>
+    <button data-preset="lifestyle">What lifestyle changes could generally help?</button>
+    <button data-preset="monitor">What symptoms should I monitor more carefully?</button>
+  </aside>
+
+</div>
+<!-- 🚀 FIXED LAYOUT END -->
+
+  <script>
+    const API_BASE = "http://localhost:3000";
+
+    window.onload = function () {
+      const navLinks = document.getElementById("navLinks");
+      const resultDiv = document.getElementById("result");
+      const resultWrapper = document.getElementById("result-wrapper");
+      const loader = document.getElementById("loader");
+      const fileInput = document.getElementById("fileInput");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const dietBtn = document.getElementById("dietBtn");
+      const exerciseBtn = document.getElementById("exerciseBtn");
+      const chatToggleBtn = document.getElementById("chatToggleBtn");
+      const saveReportBtnMain = document.getElementById("saveReportBtnMain");
+      const detailSlider = document.getElementById("detailSlider");
+      const detailLabel = document.getElementById("detailLabel");
+      const chatPanel = document.getElementById("chatPanel");
+      const chatInput = document.getElementById("chatInput");
+      const chatSendBtn = document.getElementById("chatSendBtn");
+      const chatLog = document.getElementById("chatLog");
+      const sidebar = document.querySelector(".sidebar");
+
+      let lastInsightRaw = "";   // plain text from Gemini
+      let lastInsightHtml = "";  // formatted for display
+
+      // --------------------------- NAV ---------------------------
+      function updateNavLinks() {
+        const token = localStorage.getItem("token");
+        navLinks.innerHTML = "";
+
+        if (token) {
+          // My Reports
+          const reportsLink = document.createElement("a");
+          reportsLink.href = "my-reports.html";
+          reportsLink.textContent = "My Reports";
+
+          // Logout
+          const logoutLink = document.createElement("a");
+          logoutLink.textContent = "Logout";
+          logoutLink.addEventListener("click", () => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("name");
+            window.location.href = "landing.html";
+          });
+
+          navLinks.appendChild(reportsLink);
+          navLinks.appendChild(logoutLink);
+
+        } else {
+          const loginLink = document.createElement("a");
+          loginLink.href = "login.html";
+          loginLink.textContent = "Login";
+
+          const signupLink = document.createElement("a");
+          signupLink.href = "signup.html";
+          signupLink.textContent = "Signup";
+
+          navLinks.appendChild(loginLink);
+          navLinks.appendChild(signupLink);
+        }
       }
 
-    } catch (err) {
-      loader.style.display = 'none';
-      console.error(err);
-      resultDiv.innerHTML = '<strong style="color:red;">❌ Error analyzing file.</strong>';
-      resultDiv.style.display = 'block';
+      updateNavLinks();
+
+      // --------------------------- DETAIL SLIDER UI ---------------------------
+      function updateDetailLabel() {
+        const v = Number(detailSlider.value);
+        let text = "Balanced detail";
+        if (v === 1) text = "Very simple";
+        else if (v === 2) text = "Simple";
+        else if (v === 3) text = "Balanced detail";
+        else if (v === 4) text = "Detailed";
+        else if (v === 5) text = "Very detailed";
+        detailLabel.textContent = text;
+      }
+      detailSlider.addEventListener("input", updateDetailLabel);
+      updateDetailLabel();
+
+      // --------------------------- FORMATTER ---------------------------
+      function cleanInsight(text) {
+        let clean = text.replace(/<(\/?)(?:strong|em)>|[rn]?>/g, "");
+        clean = clean
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.*?)\*/g, "<em>$1</em>");
+        clean = clean
+          .split(/\n{2,}/)
+          .map((para) => `<p>${para.trim()}</p>`)
+          .join("");
+        return clean;
+      }
+
+      // --------------------------- SAVE REPORT ---------------------------
+      async function saveReport(insightText) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Please login first.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/save-report`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,   // raw token, matches backend verifyToken
+            },
+            body: JSON.stringify({ content: insightText }),
+          });
+
+          if (!response.ok) {
+            alert(`Save failed (${response.status})`);
+            return;
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            alert("Report saved successfully!");
+          } else {
+            alert(data.message || "Failed to save report");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error saving report");
+        }
+      }
+
+      saveReportBtnMain.addEventListener("click", () => {
+        if (!lastInsightRaw) {
+          alert("Analyze a report first before saving.");
+          return;
+        }
+        saveReport(lastInsightRaw);
+      });
+
+
+
+     // --------------------------- CALL FOLLOW-UP ENDPOINT ---------------------------
+async function callFollowup(mode, customMessage = "") {
+    resultDiv.innerHTML = "";
+  resultDiv.style.display = "none";
+  chatLog.innerHTML = "";
+  if (!lastInsightRaw) {
+    alert("Please run Analyze Report first.");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please login first.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    loader.style.display = "block";
+
+    const response = await fetch(`${API_BASE}/followup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token        // FIXED — raw token only
+      },
+      body: JSON.stringify({
+        insight: lastInsightRaw,
+        mode,
+        userMessage: customMessage,
+        detailLevel: Number(detailSlider.value),
+      }),
+    });
+
+    const data = await response.json();
+    loader.style.display = "none";
+
+    if (data.success && data.reply) {
+      const html = cleanInsight(data.reply);
+
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML += `
+        <hr style="border-color:#1b2735;margin:1rem 0;">
+        <h3 style="color:#00fff7;margin-bottom:0.4rem;">
+          ${
+            mode === "diet"
+              ? "🍽 Diet Plan"
+              : mode === "exercise"
+              ? "🏃 Exercise Guidance"
+              : "Follow-up"
+          }
+        </h3>
+        ${html}
+      `;
+    } else {
+      alert(data.message || "Follow-up failed");
     }
+  } catch (err) {
+    loader.style.display = "none";
+    console.error(err);
+    alert("Error while asking follow-up");
+  }
+}
+
+// Diet & Exercise buttons
+dietBtn.addEventListener("click", () => callFollowup("diet"));
+exerciseBtn.addEventListener("click", () => callFollowup("exercise"));
+
+// Sidebar preset buttons
+sidebar.querySelectorAll("button[data-preset]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const type = btn.getAttribute("data-preset");
+
+    const messages = {
+      summarize: "Explain this whole report in very simple, everyday language.",
+      risk: "What are the main risks or red-flag issues mentioned here?",
+      checklist: "Give me a checklist of questions I might ask my doctor based on this report.",
+      lifestyle: "What general lifestyle changes could support my health based on this report?",
+      monitor: "What symptoms or warning signs should I pay extra attention to?",
+    };
+
+    callFollowup("preset", messages[type]);
   });
 });
-</script>
+
+// --------------------------- CHAT WITH YOUR REPORT ---------------------------
+chatToggleBtn.addEventListener("click", () => {
+  chatPanel.style.display =
+    chatPanel.style.display === "none" || chatPanel.style.display === ""
+      ? "block"
+      : "none";
+});
+
+chatSendBtn.addEventListener("click", async () => {
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  chatInput.value = "";
+
+  const userDiv = document.createElement("div");
+  userDiv.className = "chat-msg user";
+  userDiv.textContent = "You: " + msg;
+  chatLog.appendChild(userDiv);
+  chatLog.scrollTop = chatLog.scrollHeight;
+
+  await callChatFollowup(msg);
+});
+
+async function callChatFollowup(message) {
+  if (!lastInsightRaw) {
+    alert("Analyze a report first to give the AI context.");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Please login first.");
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/followup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,    // FIXED — raw token only
+      },
+      body: JSON.stringify({
+        insight: lastInsightRaw,
+        mode: "chat",
+        userMessage: message,
+        detailLevel: Number(detailSlider.value),
+      }),
+    });
+
+    const data = await response.json();
+
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "chat-msg ai";
+
+    if (data.success && data.reply) {
+      aiDiv.innerHTML = "AI: " + data.reply.replace(/\n/g, "<br>");
+    } else {
+      aiDiv.textContent = "AI: (follow-up failed)";
+    }
+
+    chatLog.appendChild(aiDiv);
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+  } catch (err) {
+    console.error(err);
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "chat-msg ai";
+    aiDiv.textContent = "AI: Error while responding.";
+    chatLog.appendChild(aiDiv);
+  }
+}
+
+
+
+      // --------------------------- ANALYZE MAIN REPORT ---------------------------
+      analyzeBtn.addEventListener("click", async () => {
+        resultDiv.innerHTML = "";
+        resultDiv.style.display = "none";
+        lastInsightRaw = "";
+        lastInsightHtml = "";
+        chatLog.innerHTML = "";
+        loader.style.display = "block";
+
+        // file check
+        if (!fileInput.files[0]) {
+          alert("Please select a file.");
+          loader.style.display = "none";
+          return;
+        }
+
+        // auth check
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("You must login first.");
+          loader.style.display = "none";
+          window.location.href = "login.html";
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+          const response = await fetch(`${API_BASE}/analyze`, {
+            method: "POST",
+            headers: {
+              Authorization: token   // raw token, same as verifyToken expects
+            },
+            body: formData
+          });
+
+          // Handle non-200 response safely
+          if (!response.ok) {
+            loader.style.display = "none";
+            const text = await response.text();
+
+            // Backend returned HTML → display readable error
+            if (text.startsWith("<")) {
+              resultDiv.style.display = "block";
+              resultDiv.innerHTML = `
+                <strong style="color:red;">❌ Server Error (HTML response)</strong>
+              `;
+              console.error("Server HTML:", text);
+            } else {
+              const errData = JSON.parse(text);
+              alert(errData.message || "Server error");
+            }
+            return;
+          }
+
+          const data = await response.json();
+          loader.style.display = "none";
+
+          // Success case
+          if (data.success && data.insight) {
+            lastInsightRaw = data.insight;
+            lastInsightHtml = cleanInsight(data.insight);
+
+            resultDiv.style.display = "block";
+            resultDiv.innerHTML = `
+              <h2>AI Medical Insight</h2>
+              ${lastInsightHtml}
+            `;
+          }
+          else {
+            alert(data.message || "No insight returned.");
+          }
+
+        } catch (err) {
+          loader.style.display = "none";
+          console.error("Analyze Error:", err);
+
+          resultDiv.style.display = "block";
+          resultDiv.innerHTML = `
+            <strong style="color:red;">❌ Error analyzing file.</strong>
+          `;
+        }
+      });
+    };   // ✅ close window.onload properly
+  </script>
 
 </body>
-</html>
+
+</html> 

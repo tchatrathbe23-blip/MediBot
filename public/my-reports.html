@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>My Saved Reports</title>
+<style>
+  body {
+    background: #0a0a0a;
+    color: #e8f7ff;
+    font-family: Inter, sans-serif;
+    padding: 1.5rem;
+  }
+
+  h1 {
+    background: linear-gradient(90deg, #00fff7, #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  a.back-link {
+    color: #00fff7;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Controls Panel */
+  .controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+
+  input, select {
+    padding: 0.5rem 0.8rem;
+    border-radius: 0.4rem;
+    border: 1px solid #1c2a35;
+    background: #111820;
+    color: #e8f7ff;
+    font-family: inherit;
+  }
+
+  #sortOrder {
+    cursor: pointer;
+  }
+
+  #reportsContainer {
+    margin-top: 1rem;
+  }
+
+  .report-card {
+    background: #111820;
+    border: 1px solid #1c2a35;
+    padding: 1rem;
+    border-radius: 0.8rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0,255,247,0.12);
+  }
+
+  .date {
+    color: #00fff7;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← Back to Dashboard</a>
+
+<h1>My Saved Reports</h1>
+
+<!-- 🔍 Controls -->
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="Search in reports..." />
+  
+  <select id="dateFilter">
+    <option value="all">All Time</option>
+    <option value="7">Last 7 Days</option>
+    <option value="30">Last 30 Days</option>
+  </select>
+
+  <select id="sortOrder">
+    <option value="new">Newest First</option>
+    <option value="old">Oldest First</option>
+  </select>
+</div>
+
+<div id="reportsContainer">Loading...</div>
+
+<script>
+  const API_BASE = "http://localhost:3000";
+  let allReports = []; // store fetched reports
+
+  async function fetchReports() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      document.getElementById("reportsContainer").textContent =
+        "You are not logged in.";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/my-reports`, {
+        method: "GET",
+        headers: { Authorization: token },
+      });
+
+      const data = await res.json();
+      const container = document.getElementById("reportsContainer");
+
+      if (!data.success || !data.reports.length) {
+        container.textContent = "No saved reports found.";
+        return;
+      }
+
+      allReports = data.reports;
+      renderReports();
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById("reportsContainer").textContent =
+        "Error fetching reports.";
+    }
+  }
+
+  function renderReports() {
+    const container = document.getElementById("reportsContainer");
+    container.innerHTML = "";
+
+    let filtered = [...allReports];
+
+    // 🔍 Search filter
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    if (query) {
+      filtered = filtered.filter((r) =>
+        r.content.toLowerCase().includes(query)
+      );
+    }
+
+    // 📅 Date filter
+    const dateFilter = document.getElementById("dateFilter").value;
+    if (dateFilter !== "all") {
+      const days = parseInt(dateFilter);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      filtered = filtered.filter((r) => new Date(r.createdAt) >= cutoff);
+    }
+
+    // ↕️ Sort order
+    const sortOrder = document.getElementById("sortOrder").value;
+    filtered.sort((a, b) =>
+      sortOrder === "new"
+        ? new Date(b.createdAt) - new Date(a.createdAt)
+        : new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    // No results after filters
+    if (filtered.length === 0) {
+      container.textContent = "No reports match your filters.";
+      return;
+    }
+
+    // Render cards
+    filtered.forEach((r) => {
+      const card = document.createElement("div");
+      card.className = "report-card";
+
+      const date = new Date(r.createdAt).toLocaleString();
+
+      card.innerHTML = `
+        <div class="date">Saved on: ${date}</div>
+        <div class="content">${r.content.replace(/\n/g, "<br>")}</div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  // Live filters
+  document.getElementById("searchInput").addEventListener("input", renderReports);
+  document.getElementById("dateFilter").addEventListener("change", renderReports);
+  document.getElementById("sortOrder").addEventListener("change", renderReports);
+
+  fetchReports();
+</script>
+
+</body>
+</html>
