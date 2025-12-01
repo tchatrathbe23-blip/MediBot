@@ -35,10 +35,11 @@
 <div id="reportList"></div>
 
 <script>
+const API_BASE = "https://medibot-f3ag.onrender.com";
 async function loadReports() {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("http://localhost:3000/my-reports", {
+  const res = await fetch(`${API_BASE}/report-history`, {
     headers: { "Authorization": token }
   });
 

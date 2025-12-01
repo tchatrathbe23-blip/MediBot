@@ -24,15 +24,34 @@
 <div id="report"></div>
 
 <script>
-const data = JSON.parse(localStorage.getItem("selectedReport"));
+  // Backend URL (for future API calls)
+  const API_BASE = "https://medibot-f3ag.onrender.com";
 
-let html = `
-  <div class="box"><h2>Summary</h2>${data.summary}</div>
-  <div class="box"><h2>Possible Issues</h2><ul>${data.possibleIssues.map(i => `<li>${i}</li>`).join("")}</ul></div>
-  <div class="box"><h2>Recommendations</h2><ul>${data.recommendations.map(r => `<li>${r}</li>`).join("")}</ul></div>
-`;
+  // Load selected report from localStorage
+  const data = JSON.parse(localStorage.getItem("selectedReport"));
 
-document.getElementById("report").innerHTML = html;
+  if (!data) {
+    document.getElementById("report").innerHTML = 
+      "<div class='box'>No report data found.</div>";
+  } else {
+    let html = `
+      <div class="box">
+        <h2>Summary</h2>${data.summary}
+      </div>
+
+      <div class="box">
+        <h2>Possible Issues</h2>
+        <ul>${data.possibleIssues.map(i => `<li>${i}</li>`).join("")}</ul>
+      </div>
+
+      <div class="box">
+        <h2>Recommendations</h2>
+        <ul>${data.recommendations.map(r => `<li>${r}</li>`).join("")}</ul>
+      </div>
+    `;
+
+    document.getElementById("report").innerHTML = html;
+  }
 </script>
 
 </body>
