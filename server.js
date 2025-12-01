@@ -59,36 +59,36 @@ function verifyToken(req, res, next) {
     next();
   });
 }
-
+ 
 app.post("/signup", async (req, res) => {
-
-  console.log("POST: signup")
+  console.log("POST: signup");
 
   try {
     const { name, password } = req.body;
 
+    // Validate input
+    if (!name || !password) {
+      return res.json({ success: false, message: "Name and password are required" });
+    }
+
     const exists = await User.findOne({ name });
-    console.log('-------------------------')
-    console.log(exists)
-    console.log('-------------------------')
+    console.log('User exists:', exists);
 
-
-  
-
-    if (exists)
+    if (exists) {
       return res.json({ success: false, message: "Name already taken" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
 
     await User.create({ name, password: hashed });
 
-    res.json({ success: true, message: "Signup successful" });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: "Signup failed" });
-  }
-});
+    return res.json({ success: true, message: "Signup successful" });
 
+  } catch (err) {
+    console.error("Signup error:", err);
+    return res.json({ success: false, message: "Signup failed" });
+  }
+});
 
 app.post("/post-here",(req,res)=>{
   console.log(req.body)
@@ -114,7 +114,6 @@ app.post("/followup", verifyToken, async (req, res) => {
 You are a medical assistant. Based only on the following analyzed medical report:
 
 "${insight}"
-
 Generate a clear, personalized DIET PLAN (detail level: ${detailLevel}/5).
 Format it cleanly using bullet points with short explanations.
 Do NOT invent medical values.

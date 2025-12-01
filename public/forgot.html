@@ -93,7 +93,7 @@ async function resetPassword() {
   const otp = document.getElementById("otp").value;
   const newPassword = document.getElementById("newPassword").value;
 
-  const res = await fetch("http://localhost:3000/reset-password", {
+  const res = await fetch(`${API_BASE}/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, otp, newPassword })
