@@ -118,6 +118,9 @@
       const authLinks = document.getElementById("authLinks");
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const loading = document.getElementById("loadingOverlay");
+      const resultArea = document.getElementById("analysisResult");
 
       dropZone.onclick = () => fileInput.click();
 
@@ -148,67 +151,63 @@
         document.getElementById("sidebarName").innerText = name;
         document.getElementById("sidebarAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff`;
       }
-    };
 
-    const fileInput = document.getElementById("fileInput");
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const loading = document.getElementById("loadingOverlay");
-    const resultArea = document.getElementById("analysisResult");
+      analyzeBtn.onclick = async () => {
+        const file = fileInput.files[0];
+        if (!file) return alert("Please select a file.");
 
-    analyzeBtn.onclick = async () => {
-      const file = fileInput.files[0];
-      if (!file) return alert("Please select a file.");
+        const token = localStorage.getItem("token");
+        if (!token) return window.location.href = "login.html";
 
-      const token = localStorage.getItem("token");
-      if (!token) return window.location.href = "login.html";
+        loading.style.display = "block";
+        resultArea.style.display = "none";
+        analyzeBtn.disabled = true;
 
-      loading.style.display = "block";
-      resultArea.style.display = "none";
-      analyzeBtn.disabled = true;
+        const fd = new FormData();
+        fd.append("file", file);
 
-      const fd = new FormData();
-      fd.append("file", file);
+        try {
+          const res = await fetch("/analyze", { method: "POST", headers: { "Authorization": token }, body: fd });
+          const data = await res.json();
+          loading.style.display = "none";
 
-      try {
-        const res = await fetch("/analyze", { method: "POST", headers: { "Authorization": token }, body: fd });
-        const data = await res.json();
-        loading.style.display = "none";
-        analyzeBtn.disabled = false;
-
-        if (data.success) {
-          resultArea.style.display = "block";
-          resultArea.innerHTML = `<h2>Analysis Result</h2><div>${data.insight.replace(/\n/g, "<br>")}</div>`;
-          // Reset button
+          if (data.success) {
+            resultArea.style.display = "block";
+            resultArea.innerHTML = `<h2>Analysis Result</h2><div>${data.insight.replace(/\n/g, "<br>")}</div>`;
+            // Reset button
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerText = "Analyze Record Now";
+            // Open assistant automatically
+            setTimeout(() => document.getElementById('mediBubble').click(), 500);
+          } else if (res.status === 429) {
+            // Safety Lock Logic: 60 seconds countdown
+            let seconds = 60;
+            const interval = setInterval(() => {
+              analyzeBtn.innerText = `Quota Busy: Wait ${seconds}s`;
+              analyzeBtn.style.opacity = "0.6";
+              analyzeBtn.disabled = true;
+              seconds--;
+              if (seconds < 0) {
+                clearInterval(interval);
+                analyzeBtn.disabled = false;
+                analyzeBtn.style.opacity = "1";
+                analyzeBtn.innerText = "Analyze Record Now";
+              }
+            }, 1000);
+            alert("Google AI is temporarily busy. Please wait for the countdown on the button before trying again.");
+          } else {
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerText = "Analyze Record Now";
+            alert("Error: " + (data.insight || "Unknown error"));
+          }
+        } catch (err) {
+          loading.style.display = "none";
           analyzeBtn.disabled = false;
           analyzeBtn.innerText = "Analyze Record Now";
-          // Open assistant automatically
-          setTimeout(() => document.getElementById('mediBubble').click(), 500);
-        } else if (res.status === 429) {
-          // Safety Lock Logic: 60 seconds countdown
-          let seconds = 60;
-          const interval = setInterval(() => {
-            analyzeBtn.innerText = `Quota Busy: Wait ${seconds}s`;
-            analyzeBtn.style.opacity = "0.6";
-            analyzeBtn.disabled = true;
-            seconds--;
-            if (seconds < 0) {
-              clearInterval(interval);
-              analyzeBtn.disabled = false;
-              analyzeBtn.style.opacity = "1";
-              analyzeBtn.innerText = "Analyze Record Now";
-            }
-          }, 1000);
-          alert("Google AI is temporarily busy. Please wait for the countdown on the button before trying again.");
-        } else {
-          analyzeBtn.disabled = false;
-          analyzeBtn.innerText = "Analyze Record Now";
-          alert("Error: " + (data.insight || "Unknown error"));
+          alert("Network error. Please try again.");
+          console.error(err);
         }
-      } catch (err) {
-        loading.style.display = "none";
-        analyzeBtn.disabled = false;
-        alert("Server error.");
-      }
+      };
     };
   </script>
 </body>

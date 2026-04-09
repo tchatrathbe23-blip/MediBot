@@ -45,7 +45,11 @@ const GEMINI_API_URL =
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-const upload = multer({ dest: uploadDir });
+const upload = multer({ dest: "uploads/" });
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 // --------------------------------------------------
 // 🔐 AUTH MIDDLEWARE
