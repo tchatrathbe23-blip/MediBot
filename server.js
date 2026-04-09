@@ -42,29 +42,32 @@ const GEMINI_API_URL =
 // --------------------------------------------------
 // 📂 File Upload Setup
 // --------------------------------------------------
+// --- FILE UPLOAD CONFIG ---
 const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-const upload = multer({ dest: "uploads/" });
-
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
+const upload = multer({ dest: uploadDir });
 
 // --------------------------------------------------
 // 🔐 AUTH MIDDLEWARE
 // --------------------------------------------------
-function verifyToken(req, res, next) {
+const verifyToken = (req, res, next) => {
   const token = req.headers["authorization"];
-  if (!token) return res.status(401).json({ message: "No token provided" });
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ message: "Invalid token" });
-
+  if (!token) {
+    console.log("Auth Error: No token provided");
+    return res.status(403).json({ message: "No token provided." });
+  }
+  
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      console.log("Auth Error: Invalid token");
+      return res.status(401).json({ message: "Failed to authenticate token." });
+    }
     req.userId = decoded.id;
     next();
   });
-}
+};
  
 app.post("/signup", async (req, res) => {
   console.log("POST: signup");
@@ -359,23 +362,29 @@ Rules:
 `;
 
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5; // Increased attempts
     let response;
 
     while (attempts < maxAttempts) {
       try {
+        console.log(`AI Attempt ${attempts + 1}/${maxAttempts}...`);
         response = await axios.post(
           `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-          { contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }] }
+          {
+            contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }],
+          }
         );
-        break; // Success!
+        break; 
       } catch (err) {
         attempts++;
-        if (err.response?.status === 429 && attempts < maxAttempts) {
-          console.log(`⚠️ Quota hit. Waiting 15s for reset... (Attempt ${attempts}/${maxAttempts})`);
-          await new Promise(resolve => setTimeout(resolve, 15000));
+        const isQuota = err.response && err.response.status === 429;
+        
+        if (isQuota && attempts < maxAttempts) {
+          console.log(`⚠️ Quota hit. Waiting 20s for reset... (Attempt ${attempts}/${maxAttempts})`);
+          await new Promise((resolve) => setTimeout(resolve, 20000));
         } else {
-          throw err; // Real error or too many retries
+          console.error("AI Error details:", err.response?.data || err.message);
+          throw err;
         }
       }
     }
