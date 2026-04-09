@@ -25,13 +25,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-// INCREASE TIMEOUTS for Render
-const server = app.listen(process.env.PORT || 3000, () => {
-  console.log(`🔥 Server running on port ${process.env.PORT || 3000}`);
-});
-server.timeout = 120000; // 2 minutes
-server.keepAliveTimeout = 120000;
-
 // --------------------------------------------------
 // 🌍 CONNECT TO MONGODB ATLAS
 // --------------------------------------------------
@@ -561,4 +554,12 @@ Rules:
   }
 });
 
-// Server already listening at the top with timeout set
+// --------------------------------------------------
+// 🚀 START SERVER
+// --------------------------------------------------
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
+  console.log(`🔥 Server running on port ${PORT}`);
+});
+server.timeout = 120000; // 2 minutes
+server.keepAliveTimeout = 120000;
