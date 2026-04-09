@@ -35,9 +35,10 @@ mongoose
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // --------------------------------------------------
 // 📂 File Upload Setup
@@ -174,17 +175,10 @@ Answer appropriately.
 `;
     }
 
-    // 🌟 Call Gemini
-    const geminiResponse = await axios.post(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      {
-        contents: [{ parts: [{ text: prompt }] }]
-      }
-    );
-
-    const reply =
-      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response generated.";
+    // 🌟 Call Gemini via Official SDK
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const reply = result.response.text() || "No response generated.";
 
     return res.json({
       success: true,
@@ -361,50 +355,30 @@ Rules:
 - Keep language simple.
 `;
 
-    const MODELS_TO_TRY = [
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-pro",
-      "gemini-pro",
-    ];
-
-    let response;
+    const MODELS_TO_TRY = ["gemini-1.5-flash", "gemini-1.5-pro"];
+    let insight = "";
     let lastError;
 
     for (const modelName of MODELS_TO_TRY) {
-      console.log(`Trying model: ${modelName} on v1 endpoint...`);
-      // v1 is typically more stable for new accounts
-      const PROXY_URL = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
-      
       try {
-        response = await axios.post(PROXY_URL, {
-          contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }],
-        });
-        console.log(`✅ Success with model: ${modelName}`);
-        break; // Found a working model!
+        console.log(`Trying model: ${modelName} via SDK...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(ANALYSIS_PROMPT);
+        insight = result.response.text();
+        if (insight) {
+          console.log(`✅ Success with ${modelName}`);
+          break;
+        }
       } catch (err) {
         lastError = err;
-        const status = err.response?.status;
-        const msg = err.response?.data?.error?.message || err.message;
-        console.warn(`❌ Model ${modelName} failed (${status}): ${msg}`);
-        
-        // If it's a quota issue, wait a bit
-        if (status === 429) {
-          console.log("⚠️ Quota hit. Waiting 5s before trying next model...");
-          await new Promise(r => setTimeout(r, 5000));
-        }
+        console.warn(`❌ ${modelName} failed:`, err.message);
         // Continue to next model
       }
     }
 
-    if (!response) {
-      const finalMsg = lastError.response?.data?.error?.message || lastError.message;
-      throw new Error(`All models failed. Last error: ${finalMsg}`);
+    if (!insight) {
+      throw lastError || new Error("All AI models failed.");
     }
-
-    const insight =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No insight returned.";
 
     await Report.create({
       userId: req.userId,
@@ -536,29 +510,11 @@ Rules:
 3. Keep it concise.
 `;
 
-    let attempts = 0;
-    const maxAttempts = 3;
-    let chatResponse;
-
-    while (attempts < maxAttempts) {
-      try {
-        chatResponse = await axios.post(
-          `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-          { contents: [{ parts: [{ text: CHAT_PROMPT }] }] }
-        );
-        break;
-      } catch (err) {
-        attempts++;
-        if (err.response?.status === 429 && attempts < maxAttempts) {
-          console.log(`⚠️ Chat Quota hit. Waiting 15s... (${attempts}/${maxAttempts})`);
-          await new Promise(r => setTimeout(r, 15000));
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    const reply = chatResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm processing your data, one moment...";
+    // 🌟 Call Gemini via Official SDK
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(CHAT_PROMPT);
+    const reply = result.response.text() || "I'm processing your data, one moment...";
+    
     res.json({ success: true, reply });
 
   } catch (err) {
