@@ -116,13 +116,34 @@
       const token = localStorage.getItem("token");
       const name = localStorage.getItem("name") || "Guest User";
       const authLinks = document.getElementById("authLinks");
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+
+      dropZone.onclick = () => fileInput.click();
+
+      fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+          document.querySelector('.uploader p').innerText = fileInput.files[0].name;
+        }
+      };
+
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--primary)"; };
+      dropZone.ondragleave = () => { dropZone.style.borderColor = "rgba(255,255,255,0.1)"; };
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "rgba(255,255,255,0.1)";
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          document.querySelector('.uploader p').innerText = e.dataTransfer.files[0].name;
+        }
+      };
 
       if (token) {
         authLinks.innerHTML = `<a href="#" id="logoutBtn" style="color:var(--danger)">Logout</a>`;
         document.getElementById("logoutBtn").onclick = (e) => {
           e.preventDefault();
           localStorage.clear();
-          window.location.href = "login.html"; // UPDATED: Redirect to login
+          window.location.href = "login.html";
         };
         document.getElementById("sidebarName").innerText = name;
         document.getElementById("sidebarAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff`;
@@ -157,24 +178,31 @@
         if (data.success) {
           resultArea.style.display = "block";
           resultArea.innerHTML = `<h2>Analysis Result</h2><div>${data.insight.replace(/\n/g, "<br>")}</div>`;
+          // Reset button
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerText = "Analyze Record Now";
           // Open assistant automatically
           setTimeout(() => document.getElementById('mediBubble').click(), 500);
         } else if (res.status === 429) {
-          // Safety Lock Logic
+          // Safety Lock Logic: 60 seconds countdown
           let seconds = 60;
-          analyzeBtn.disabled = true;
           const interval = setInterval(() => {
-            analyzeBtn.innerText = `Quota Reset in ${seconds}s...`;
+            analyzeBtn.innerText = `Quota Busy: Wait ${seconds}s`;
+            analyzeBtn.style.opacity = "0.6";
+            analyzeBtn.disabled = true;
             seconds--;
             if (seconds < 0) {
               clearInterval(interval);
               analyzeBtn.disabled = false;
+              analyzeBtn.style.opacity = "1";
               analyzeBtn.innerText = "Analyze Record Now";
             }
           }, 1000);
-          alert("AI Quota hit! The button will unlock automatically in 60 seconds. Please do not refresh.");
+          alert("Google AI is temporarily busy. Please wait for the countdown on the button before trying again.");
         } else {
-          alert("Error: " + data.insight);
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerText = "Analyze Record Now";
+          alert("Error: " + (data.insight || "Unknown error"));
         }
       } catch (err) {
         loading.style.display = "none";
