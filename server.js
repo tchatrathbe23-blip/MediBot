@@ -365,43 +365,41 @@ Rules:
       "gemini-1.5-flash",
       "gemini-1.5-flash-latest",
       "gemini-1.5-pro",
+      "gemini-pro",
     ];
 
     let response;
     let lastError;
 
     for (const modelName of MODELS_TO_TRY) {
-      console.log(`Trying model: ${modelName}...`);
-      const PROXY_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      console.log(`Trying model: ${modelName} on v1 endpoint...`);
+      // v1 is typically more stable for new accounts
+      const PROXY_URL = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
       
-      let attempts = 0;
-      const maxAttempts = 3;
-      let success = false;
-
-      while (attempts < maxAttempts) {
-        try {
-          response = await axios.post(PROXY_URL, {
-            contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }],
-          });
-          success = true;
-          break;
-        } catch (err) {
-          attempts++;
-          const isQuota = err.response && err.response.status === 429;
-          if (isQuota && attempts < maxAttempts) {
-            console.log(`⚠️ Quota hit. Waiting 10s...`);
-            await new Promise((resolve) => setTimeout(resolve, 10000));
-          } else {
-            lastError = err;
-            break;
-          }
+      try {
+        response = await axios.post(PROXY_URL, {
+          contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }],
+        });
+        console.log(`✅ Success with model: ${modelName}`);
+        break; // Found a working model!
+      } catch (err) {
+        lastError = err;
+        const status = err.response?.status;
+        const msg = err.response?.data?.error?.message || err.message;
+        console.warn(`❌ Model ${modelName} failed (${status}): ${msg}`);
+        
+        // If it's a quota issue, wait a bit
+        if (status === 429) {
+          console.log("⚠️ Quota hit. Waiting 5s before trying next model...");
+          await new Promise(r => setTimeout(r, 5000));
         }
+        // Continue to next model
       }
-      if (success) break;
     }
 
     if (!response) {
-      throw lastError || new Error("All models failed to respond.");
+      const finalMsg = lastError.response?.data?.error?.message || lastError.message;
+      throw new Error(`All models failed. Last error: ${finalMsg}`);
     }
 
     const insight =
