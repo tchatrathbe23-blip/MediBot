@@ -59,7 +59,7 @@ const verifyToken = (req, res, next) => {
     console.log("Auth Error: No token provided");
     return res.status(403).json({ message: "No token provided." });
   }
-  
+
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       console.log("Auth Error: Invalid token");
@@ -69,7 +69,7 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
- 
+
 app.post("/signup", async (req, res) => {
   console.log("POST: signup");
 
@@ -100,7 +100,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/post-here",(req,res)=>{
+app.post("/post-here", (req, res) => {
   console.log(req.body)
   return res.send("This is post: test")
 })
@@ -176,7 +176,7 @@ Answer appropriately.
     }
 
     // 🌟 Call Gemini via Official SDK
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent(prompt);
     const reply = result.response.text() || "No response generated.";
 
@@ -355,7 +355,7 @@ Rules:
 - Keep language simple.
 `;
 
-    const MODELS_TO_TRY = ["gemini-1.5-flash", "gemini-1.5-pro"];
+    const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
     let insight = "";
     let lastError;
 
@@ -391,12 +391,12 @@ Rules:
   } catch (err) {
     const status = err.response?.status || 500;
     const errorMsg = err.response?.data?.error?.message || err.message;
-    
+
     console.error(`❌ Analyze Error (${status}):`, errorMsg);
 
-    return res.status(status).json({ 
-      success: false, 
-      insight: `Analysis Error: ${errorMsg}` 
+    return res.status(status).json({
+      success: false,
+      insight: `Analysis Error: ${errorMsg}`
     });
   } finally {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -511,10 +511,10 @@ Rules:
 `;
 
     // 🌟 Call Gemini via Official SDK
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent(CHAT_PROMPT);
     const reply = result.response.text() || "I'm processing your data, one moment...";
-    
+
     res.json({ success: true, reply });
 
   } catch (err) {
