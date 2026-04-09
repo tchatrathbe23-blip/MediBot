@@ -361,32 +361,47 @@ Rules:
 - Keep language simple.
 `;
 
-    let attempts = 0;
-    const maxAttempts = 5; // Increased attempts
-    let response;
+    const MODELS_TO_TRY = [
+      "gemini-1.5-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-pro",
+    ];
 
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`AI Attempt ${attempts + 1}/${maxAttempts}...`);
-        response = await axios.post(
-          `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-          {
+    let response;
+    let lastError;
+
+    for (const modelName of MODELS_TO_TRY) {
+      console.log(`Trying model: ${modelName}...`);
+      const PROXY_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+      
+      let attempts = 0;
+      const maxAttempts = 3;
+      let success = false;
+
+      while (attempts < maxAttempts) {
+        try {
+          response = await axios.post(PROXY_URL, {
             contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }],
+          });
+          success = true;
+          break;
+        } catch (err) {
+          attempts++;
+          const isQuota = err.response && err.response.status === 429;
+          if (isQuota && attempts < maxAttempts) {
+            console.log(`⚠️ Quota hit. Waiting 10s...`);
+            await new Promise((resolve) => setTimeout(resolve, 10000));
+          } else {
+            lastError = err;
+            break;
           }
-        );
-        break; 
-      } catch (err) {
-        attempts++;
-        const isQuota = err.response && err.response.status === 429;
-        
-        if (isQuota && attempts < maxAttempts) {
-          console.log(`⚠️ Quota hit. Waiting 20s for reset... (Attempt ${attempts}/${maxAttempts})`);
-          await new Promise((resolve) => setTimeout(resolve, 20000));
-        } else {
-          console.error("AI Error details:", err.response?.data || err.message);
-          throw err;
         }
       }
+      if (success) break;
+    }
+
+    if (!response) {
+      throw lastError || new Error("All models failed to respond.");
     }
 
     const insight =
