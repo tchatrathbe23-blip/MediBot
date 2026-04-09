@@ -1,142 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Signup</title>
+  <meta charset="UTF-8">
+  <title>MediBot | Create Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    :root {
+      --bg-main: #020617;
+      --primary: #a855f7;
+      --primary-hover: #9333ea;
+      --secondary: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --card-bg: #0f172a;
+    }
 
-<style>
-  /* === GLOBAL === */
-  * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-  html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: "Inter", sans-serif;
-    background: linear-gradient(135deg, #0a0a0a, #111);
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+    .signup-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 2.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.6s ease-out;
+    }
 
-  /* === CARD === */
-  .card {
-    width: 360px;
-    padding: 2rem;
-    background: #111;
-    border-radius: 1.25rem;
-    box-shadow: 0 10px 40px rgba(0,255,247,0.2);
-    animation: fade-in 0.6s ease both;
-    text-align: center;
-  }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .brand-icon {
+      background: var(--primary);
+      color: white;
+      border-radius: 1rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+    }
+    .brand h1 { font-size: 1.75rem; font-weight: 800; color: white; }
+    .brand p { color: var(--text-muted); font-size: 0.9rem; }
 
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper i {
+      position: absolute;
+      left: 1rem;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+    .input-wrapper input {
+      width: 100%;
+      padding: 0.85rem 1rem 0.85rem 3rem;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      color: white;
+      font-family: inherit;
+      outline: none;
+      transition: 0.2s;
+    }
+    .input-wrapper input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2); }
 
-  .card h2 {
-    background: linear-gradient(90deg, #00fff7, #00aaff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-  }
+    .btn-signup {
+      width: 100%;
+      padding: 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 1rem;
+    }
+    .btn-signup:hover { background: var(--primary-hover); transform: translateY(-1px); }
 
-  /* === INPUTS === */
-  input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-    background: #1a1a1a;
-    color: #00fff7;
-    font-size: 1rem;
-    border: 2px solid #00aabb;
-    transition: 0.25s;
-  }
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .footer a:hover { color: var(--primary-hover); }
 
-  input:focus {
-    border-color: #00fff7;
-    box-shadow: 0 0 10px rgba(0,255,247,0.3);
-  }
-
-  /* === BUTTON === */
-  button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    background: #00fff7;
-    color: #0a0a0a;
-    cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,255,247,0.5);
-  }
-
-  /* === LINKS === */
-  p {
-    margin-top: 1rem;
-    color: #ccc;
-  }
-
-  a {
-    color: #00fff7;
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
-
 <body>
 
-  <div class="card">
-    <h2>Create Account</h2>
+  <div class="signup-container">
+    <div class="brand">
+      <div class="brand-icon"><i class="ph ph-robot"></i></div>
+      <h1>Create Account</h1>
+      <p>Join MediBot for smart medical insights</p>
+    </div>
 
-    <input id="name" type="text" placeholder="Full Name">
-    <input id="password" type="password" placeholder="Password">
+    <form id="signupForm">
+      <div class="form-group">
+        <label>FULL NAME</label>
+        <div class="input-wrapper">
+          <i class="ph ph-user-circle"></i>
+          <input type="text" id="name" placeholder="John Doe" required autocomplete="name">
+        </div>
+      </div>
 
-    <button onclick="signup()">Signup</button>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <div class="input-wrapper">
+          <i class="ph ph-lock"></i>
+          <input type="password" id="password" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+      </div>
 
-    <p>Already have an account? <a href="login.html">Login</a></p>
+      <button type="submit" class="btn-signup">Join MediBot</button>
+    </form>
+
+    <div class="footer">
+      Already have an account? <a href="login.html">Sign In</a>
+    </div>
   </div>
 
-<script>
-    const API_BASE = "https://medibot-f3ag.onrender.com";
-async function signup() {
-  
-  const name = document.getElementById("name").value;
-  const password = document.getElementById("password").value;
+  <script>
+    const API_BASE = "";
 
-  const res = await fetch(`${API_BASE}/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, password })
-  });
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const signupBtn = e.target.querySelector("button");
+      signupBtn.innerText = "Creating Account...";
+      signupBtn.disabled = true;
 
-  const data = await res.json();
-  if (data.success) {
-    window.location.href = "login.html";
-  } else {
-    alert(data.message);
-  }
-}
-</script>
+      const name = document.getElementById("name").value.trim();
+      const password = document.getElementById("password").value;
 
+      try {
+        const response = await fetch(`${API_BASE}/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, password }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert("Account created successfully! Please login.");
+          window.location.href = "login.html";
+        } else {
+          alert(data.message || "Signup failed");
+          signupBtn.innerText = "Join MediBot";
+          signupBtn.disabled = false;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server error. Please try again.");
+        signupBtn.innerText = "Join MediBot";
+        signupBtn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

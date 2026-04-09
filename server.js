@@ -16,6 +16,8 @@ const cors = require("cors");
 // Models
 const User = require("./models/User");
 const Report = require("./models/Reports");
+const Appointment = require("./models/Appointment");
+const Medication = require("./models/Medication");
 
 const app = express();
 app.use(express.json());
@@ -35,7 +37,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 // --------------------------------------------------
 // 📂 File Upload Setup
@@ -86,8 +88,8 @@ app.post("/signup", async (req, res) => {
 
   } catch (err) {
     console.error("Signup error:", err);
-    return res.json({ success: false, message: "Signup failed" });
-  }
+    return res.json({ success: false, message: "Signup failed: " + err.message });
+  }
 });
 
 app.post("/post-here",(req,res)=>{
@@ -352,10 +354,27 @@ Rules:
 - Keep language simple.
 `;
 
-    const response = await axios.post(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      { contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }] }
-    );
+    let attempts = 0;
+    const maxAttempts = 3;
+    let response;
+
+    while (attempts < maxAttempts) {
+      try {
+        response = await axios.post(
+          `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+          { contents: [{ parts: [{ text: ANALYSIS_PROMPT }] }] }
+        );
+        break; // Success!
+      } catch (err) {
+        attempts++;
+        if (err.response?.status === 429 && attempts < maxAttempts) {
+          console.log(`⚠️ Quota hit. Waiting 15s for reset... (Attempt ${attempts}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, 15000));
+        } else {
+          throw err; // Real error or too many retries
+        }
+      }
+    }
 
     const insight =
       response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
@@ -367,10 +386,18 @@ Rules:
       createdAt: new Date(),
     });
 
-    res.json({ success: true, insight });
+    return res.json({ success: true, insight });
+
   } catch (err) {
-    console.error("❌ Analyze Error:", err);
-    res.status(500).json({ success: false, insight: "Failed to analyze" });
+    const status = err.response?.status || 500;
+    const errorMsg = err.response?.data?.error?.message || err.message;
+    
+    console.error(`❌ Analyze Error (${status}):`, errorMsg);
+
+    return res.status(status).json({ 
+      success: false, 
+      insight: `Analysis Error: ${errorMsg}` 
+    });
   } finally {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
@@ -389,6 +416,128 @@ app.get("/my-reports", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("FETCH REPORTS ERROR:", err);
     res.json({ success: false, message: "Failed to fetch reports" });
+  }
+});
+
+// --------------------------------------------------
+// 📅 APPOINTMENTS
+// --------------------------------------------------
+app.get("/appointments", verifyToken, async (req, res) => {
+  try {
+    const list = await Appointment.find({ userId: req.userId }).sort({ date: 1 });
+    res.json({ success: true, appointments: list });
+  } catch (err) {
+    res.json({ success: false, message: "Error fetching appointments" });
+  }
+});
+
+app.post("/appointments", verifyToken, async (req, res) => {
+  try {
+    const { title, doctor, date, time, location } = req.body;
+    const apt = await Appointment.create({ userId: req.userId, title, doctor, date, time, location });
+    res.json({ success: true, appointment: apt });
+  } catch (err) {
+    res.json({ success: false, message: "Error creating appointment" });
+  }
+});
+
+// --------------------------------------------------
+// 💊 MEDICATIONS
+// --------------------------------------------------
+app.get("/medications", verifyToken, async (req, res) => {
+  try {
+    const list = await Medication.find({ userId: req.userId });
+    res.json({ success: true, medications: list });
+  } catch (err) {
+    res.json({ success: false, message: "Error fetching medications" });
+  }
+});
+
+app.post("/medications", verifyToken, async (req, res) => {
+  try {
+    const { name, dosage, schedule, notes } = req.body;
+    const med = await Medication.create({ userId: req.userId, name, dosage, schedule, notes });
+    res.json({ success: true, medication: med });
+  } catch (err) {
+    res.json({ success: false, message: "Error saving medication" });
+  }
+});
+
+// --------------------------------------------------
+// 👤 PROFILE & FEEDBACK
+// --------------------------------------------------
+app.post("/update-profile", verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    await User.findByIdAndUpdate(req.userId, { name });
+    res.json({ success: true, message: "Profile updated" });
+  } catch (err) {
+    res.json({ success: false, message: "Update failed" });
+  }
+});
+
+app.post("/submit-feedback", verifyToken, async (req, res) => {
+  try {
+    // We'll just log feedback for now or save to a simple collection if needed
+    console.log(`Feedback from ${req.userId}:`, req.body);
+    res.json({ success: true, message: "Feedback submitted" });
+  } catch (err) {
+    res.json({ success: false });
+  }
+});
+
+// --------------------------------------------------
+// 🤖 GENERAL AI CHAT (Medi-Assistant)
+app.post("/chat", verifyToken, async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    // 🌟 Fetch latest report for context
+    const latestReport = await Report.findOne({ userId: req.userId }).sort({ createdAt: -1 });
+    const context = latestReport ? `CONTEXT REPORT:\n${latestReport.content}\n` : "No medical report uploaded yet.";
+
+    const CHAT_PROMPT = `
+You are MediBot Assistant, a helpful medical companion. 
+Use the following context to answer the user's question, but keep it professional.
+
+${context}
+
+USER QUESTION: ${message}
+
+Rules:
+1. If the user says "hi", just be friendly.
+2. If they ask about the report, use the context.
+3. Keep it concise.
+`;
+
+    let attempts = 0;
+    const maxAttempts = 3;
+    let chatResponse;
+
+    while (attempts < maxAttempts) {
+      try {
+        chatResponse = await axios.post(
+          `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+          { contents: [{ parts: [{ text: CHAT_PROMPT }] }] }
+        );
+        break;
+      } catch (err) {
+        attempts++;
+        if (err.response?.status === 429 && attempts < maxAttempts) {
+          console.log(`⚠️ Chat Quota hit. Waiting 15s... (${attempts}/${maxAttempts})`);
+          await new Promise(r => setTimeout(r, 15000));
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    const reply = chatResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm processing your data, one moment...";
+    res.json({ success: true, reply });
+
+  } catch (err) {
+    console.error("CHAT ERROR:", err.message);
+    res.json({ success: false, message: "Assistant offline - Try again in 30s" });
   }
 });
 
