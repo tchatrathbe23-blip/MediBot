@@ -355,7 +355,7 @@ Rules:
 - Keep language simple.
 `;
 
-    const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+    const MODELS_TO_TRY = ["gemini-2.0-flash"];
     let insight = "";
     let lastError;
 
