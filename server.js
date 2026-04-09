@@ -389,17 +389,24 @@ Rules:
     return res.json({ success: true, insight });
 
   } catch (err) {
-    const status = err.response?.status || 500;
-    const errorMsg = err.response?.data?.error?.message || err.message;
+    // Get the actual status code
+    const status = err.status || err.response?.status || 500;
+    const errorMsg = err.message || "Unknown error";
 
     console.error(`❌ Analyze Error (${status}):`, errorMsg);
 
-    return res.status(status).json({
+    // Handle quota exceeded specifically
+    if (status === 429) {
+      return res.status(200).json({
+        success: false,
+        insight: "⚠️ AI quota exceeded. Please wait a minute and try again, or upgrade your Gemini plan."
+      });
+    }
+
+    return res.status(200).json({
       success: false,
       insight: `Analysis Error: ${errorMsg}`
     });
-  } finally {
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
 });
 

@@ -1,14 +1,26 @@
 :root {
-  --primary: #3b82f6; /* Professional Blue */
+  --primary: #3b82f6; 
   --primary-hover: #2563eb;
-  --bg-main: #f1f5f9; /* Soft Slate Gray */
+  --bg-main: #f1f5f9; 
   --card-bg: #ffffff;
   --text-main: #1e293b;
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --success: #22c55e;
   --danger: #ef4444;
+  --sidebar-w: 260px;
 }
+
+/* --- Dark Mode Variables --- */
+body.dark-mode {
+  --bg-main: #0f172a;/* Slate 900 */
+  --card-bg: #1e293b;/* Slate 800 */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+}
+
+* { box-sizing: border-box; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
 
 body {
   font-family: 'Inter', sans-serif;
@@ -22,12 +34,18 @@ body {
 
 /* --- Professional Sidebar --- */
 .app-sidebar {
-  width: 260px;
-  background: white;
+  width: var(--sidebar-w);
+  background: var(--card-bg);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+
+.app-sidebar.collapsed {
+  width: 80px;
 }
 
 .brand {
@@ -38,7 +56,10 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--primary);
+  white-space: nowrap;
 }
+
+.app-sidebar.collapsed .brand span { display: none; }
 
 .nav-menu {
   flex: 1;
@@ -56,18 +77,23 @@ body {
   font-weight: 500;
   transition: all 0.2s;
   margin-bottom: 0.25rem;
+  white-space: nowrap;
 }
 
 .nav-item:hover, .nav-item.active {
-  background: #eff6ff;
+  background: rgba(59, 130, 246, 0.1);
   color: var(--primary);
 }
+
+.app-sidebar.collapsed .nav-item span { display: none; }
+.app-sidebar.collapsed .nav-item { justify-content: center; padding: 1rem; }
 
 /* --- Main Layout --- */
 .app-main {
   flex: 1;
   overflow-y: auto;
   padding: 2rem 3rem;
+  transition: padding 0.3s ease;
 }
 
 .top-bar {
@@ -82,11 +108,12 @@ body {
 
 /* --- Wellsnyc Style Cards --- */
 .card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 1.25rem;
   border: 1px solid var(--border-color);
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
 }
 
 .btn-primary {
@@ -102,3 +129,40 @@ body {
 
 .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
 .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+/* Toggle Switches */
+.icon-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 40px;
+  height: 40px;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover { background: var(--bg-main); border-color: var(--primary); color: var(--primary); }
+
+/* Score Gauge Animation */
+@keyframes gauge-fill {
+  from { width: 0; }
+  to { width: var(--fill); }
+}
+
+.score-bar {
+  height: 12px;
+  background: var(--bg-main);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.score-fill {
+  height: 100%;
+  background: var(--primary);
+  width: var(--fill);
+  animation: gauge-fill 1s ease-out;
+}

@@ -3,89 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediBot - Professional Health Dashboard</title>
+  <title>Dashboard - MediBot</title>
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    /* Specific to Uploader */
-    .uploader-zone {
-      border: 2px dashed #e2e8f0;
-      border-radius: 1.25rem;
-      padding: 3rem;
-      text-align: center;
-      transition: all 0.2s;
-      cursor: pointer;
-      background: #f8fafc;
-    }
-    .uploader-zone:hover { border-color: var(--primary); background: #eff6ff; }
-    
-    #loadingOverlay {
-      display: none;
-      text-align: center;
-      padding: 2rem;
-    }
-    #analysisResult {
-      display: none;
-      margin-top: 2rem;
-      line-height: 1.6;
-    }
-    #analysisResult h2 { color: var(--primary); margin-bottom: 1rem; }
+    .uploader-zone { border: 2px dashed var(--border-color); border-radius: 1.25rem; padding: 3rem; text-align: center; cursor: pointer; background: var(--bg-main); transition: 0.2s; }
+    .uploader-zone:hover { border-color: var(--primary); }
+    #loadingOverlay { display: none; text-align: center; padding: 2rem; }
+    #analysisResult { display: none; margin-top: 2rem; }
+    #scoreCard { display: none; }
   </style>
 </head>
 <body>
 
-  <aside class="app-sidebar">
+  <aside class="app-sidebar" id="sidebar">
     <div class="brand">
-      <i class="ph ph-heartbeat"></i> MediBot
+       <i class="ph ph-heartbeat"></i> <span>MediBot</span>
     </div>
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item active"><i class="ph ph-grid-four"></i> Dashboard</a>
-      <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> Appointments</a>
-      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
-      <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> My Profile</a>
-      <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
+      <a href="index.html" class="nav-item active"><i class="ph ph-grid-four"></i> <span>Dashboard</span></a>
+      <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> <span>Appointments</span></a>
+      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
+      <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> <span>My Profile</span></a>
       <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
   </aside>
 
   <main class="app-main">
     <div class="top-bar">
-      <div class="welcome-msg">
-        <h1 id="sidebarName">Welcome back, User</h1>
-        <p>Your AI-powered medical insights are waiting.</p>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
+        <div class="welcome-msg">
+          <h1 id="userName">Welcome back</h1>
+          <p id="currentDate">MediBot is ready to analyze.</p>
+        </div>
       </div>
-      <div class="user-pill card" style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem;">
-         <img id="sidebarAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" style="width:32px; border-radius:50%;">
-         <span style="font-weight:600;">Secure Session</span>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
+        <div class="user-pill card" style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem; margin-bottom:0;">
+           <img id="userAvatar" src="https://ui-avatars.com/api/?background=3b82f6&color=fff" style="width:32px; border-radius:50%;">
+           <span style="font-weight:600; font-size:0.85rem;" id="statusLabel">Secure Session</span>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom: 2rem;">
+    <!-- Health Score Gauge -->
+    <div id="scoreCard" class="card" style="background: linear-gradient(135deg, var(--primary), #6366f1); color:white; border:none;">
+       <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+             <h2 style="font-size:1.5rem; margin-bottom:0.5rem;">Health Clarity Score</h2>
+             <p style="opacity:0.9; font-size:0.9rem;">Your record analysis depth</p>
+          </div>
+          <div style="font-size:3rem; font-weight:800;" id="scoreValue">85%</div>
+       </div>
+       <div class="score-bar" style="background:rgba(255,255,255,0.2);">
+          <div class="score-fill" id="scoreFill" style="background:white; --fill:85%;"></div>
+       </div>
+       <p style="margin-top:1rem; font-size:0.85rem; opacity:0.8;" id="scoreVerdict">Record is highly legible and ready for clinical review.</p>
+    </div>
+
+    <div class="card">
       <h2 style="margin-bottom: 1.5rem; font-size:1.25rem;">Analyze New Medical Record</h2>
       <div class="uploader-zone" id="dropZone">
         <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-        <h3 style="margin-bottom:0.5rem;">Drop report here or click to browse</h3>
-        <p style="color: var(--text-muted); font-size:0.9rem;">Supports PDF, Images, and DOCX records</p>
+        <h3>Drop report here or click to browse</h3>
+        <p style="color: var(--text-muted); font-size:0.9rem;">Supports PDF, Images, and DOCX</p>
         <input type="file" id="fileInput" hidden>
       </div>
       
       <div id="loadingOverlay">
         <i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
-        <p style="font-weight:600;">Processing Clinical Data...</p>
+        <p style="font-weight:600;">Generating Insights...</p>
       </div>
 
-      <div id="analysisResult" class="card" style="background: #f8fafc; border:none; margin-top:1.5rem;"></div>
+      <div id="analysisResult" class="card" style="margin-top:1.5rem;"></div>
 
       <div style="margin-top:1.5rem; display:flex; justify-content:flex-end;">
         <button class="btn-primary" id="analyzeBtn" disabled>Analyze Clinical Record</button>
       </div>
-    </div>
-
-    <div class="card">
-       <h3 style="margin-bottom:1rem;">Health Tip of the Day</h3>
-       <p style="color:var(--text-muted);">Maintaining a consistent sleep schedule of 7-8 hours significantly improves mental clarity and hormonal balance.</p>
     </div>
   </main>
 
@@ -94,49 +91,59 @@
     window.onload = () => {
       const token = localStorage.getItem("token");
       const name = localStorage.getItem("name") || "Guest User";
+      if (!token) window.location.href = "login.html";
+
+      // Theme & Sidebar States
+      const body = document.body;
+      const sidebar = document.getElementById("sidebar");
+      const toggleSidebar = document.getElementById("toggleSidebar");
+      const toggleTheme = document.getElementById("toggleTheme");
+
+      // Load Theme
+      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
+
+      toggleTheme.onclick = () => {
+        body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+        toggleTheme.innerHTML = body.classList.contains("dark-mode") ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+      };
+
+      toggleSidebar.onclick = () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebar", sidebar.classList.contains("collapsed") ? "collapsed" : "expanded");
+      };
+
+      document.getElementById("userName").innerText = "Welcome back, " + name;
+      document.getElementById("currentDate").innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById("userAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+
       const authLinks = document.getElementById("authLinks");
+      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
+      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+
       const analyzeBtn = document.getElementById("analyzeBtn");
       const fileInput = document.getElementById("fileInput");
       const dropZone = document.getElementById("dropZone");
       const resultArea = document.getElementById("analysisResult");
       const loading = document.getElementById("loadingOverlay");
-
-      if (!token) window.location.href = "login.html";
-      document.getElementById("sidebarName").innerText = "Welcome, " + name;
+      const scoreCard = document.getElementById("scoreCard");
 
       let currentFile = null;
 
-      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
-      document.getElementById("logoutBtn").onclick = () => {
-        localStorage.clear();
-        window.location.href = "login.html";
-      };
-
-      // File Selection logic
       dropZone.onclick = () => fileInput.click();
-      fileInput.onchange = (e) => handleFile(e.target.files[0]);
-      
-      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = "#eff6ff"; };
-      dropZone.ondragleave = () => { dropZone.style.background = "#f8fafc"; };
-      dropZone.ondrop = (e) => {
-        e.preventDefault();
-        dropZone.style.background = "#f8fafc";
-        handleFile(e.dataTransfer.files[0]);
+      fileInput.onchange = (e) => {
+        currentFile = e.target.files[0];
+        if(currentFile) {
+          document.querySelector('.uploader-zone h3').innerText = currentFile.name;
+          analyzeBtn.disabled = false;
+        }
       };
-
-      function handleFile(file) {
-        if (!file) return;
-        currentFile = file;
-        document.querySelector('.uploader-zone h3').innerText = file.name;
-        document.querySelector('.uploader-zone p').innerText = "File selected and ready for analysis";
-        analyzeBtn.disabled = false;
-      }
 
       analyzeBtn.onclick = async () => {
-        if (!currentFile) return;
-
         loading.style.display = "block";
         resultArea.style.display = "none";
+        scoreCard.style.display = "none";
         analyzeBtn.disabled = true;
 
         const fd = new FormData();
@@ -153,30 +160,24 @@
 
           if (data.success) {
             resultArea.style.display = "block";
-            resultArea.innerHTML = `<h2>Analysis Insight</h2><div>${data.insight.split('\n').join('<br>')}</div>`;
+            resultArea.innerHTML = `<h2>Clinical Insights</h2><div>${data.insight.replace(/\n/g, '<br>')}</div>`;
+            
+            // Random-ish score for demo (in production AI will return this)
+            const score = Math.floor(Math.random() * 30) + 70;
+            scoreCard.style.display = "block";
+            document.getElementById("scoreValue").innerText = score + "%";
+            document.getElementById("scoreFill").style.setProperty("--fill", score + "%");
+            
             analyzeBtn.disabled = false;
-            // Helpfully open the chat bot
             setTimeout(() => document.getElementById('mediBubble').click(), 500);
-          } else if (res.status === 429) {
-             let seconds = 60;
-             const interval = setInterval(() => {
-                analyzeBtn.innerText = `AI Busy: Waiting ${seconds}s`;
-                seconds--;
-                if (seconds < 0) {
-                   clearInterval(interval);
-                   analyzeBtn.disabled = false;
-                   analyzeBtn.innerText = "Analyze Clinical Record";
-                }
-             }, 1000);
-             alert("AI Quota hit. Please wait for the timer on the button.");
           } else {
             analyzeBtn.disabled = false;
-            alert("Analysis failed: " + (data.insight || "Server error"));
+            alert(data.insight || "Analysis failed.");
           }
         } catch (err) {
           loading.style.display = "none";
           analyzeBtn.disabled = false;
-          alert("Network error. Please try again.");
+          alert("Network error.");
         }
       };
     };

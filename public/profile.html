@@ -7,67 +7,85 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body>
+<body id="mainBody">
 
-  <aside class="app-sidebar">
+  <aside class="app-sidebar" id="sidebar">
     <div class="brand">
-      <i class="ph ph-heartbeat"></i> MediBot
+      <i class="ph ph-heartbeat"></i> <span>MediBot</span>
     </div>
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> Dashboard</a>
-      <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> Appointments</a>
-      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
-      <a href="profile.html" class="nav-item active"><i class="ph ph-user"></i> My Profile</a>
-      <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
+      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> <span>Dashboard</span></a>
+      <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> <span>Appointments</span></a>
+      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
+      <a href="profile.html" class="nav-item active"><i class="ph ph-user"></i> <span>My Profile</span></a>
       <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
   </aside>
 
   <main class="app-main">
     <div class="top-bar">
-      <div class="welcome-msg">
-        <h1>My Profile</h1>
-        <p>Manage your personal information and security settings.</p>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
+        <div class="welcome-msg">
+          <h1>My Profile</h1>
+          <p>Security and personal health information.</p>
+        </div>
       </div>
+      <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
     </div>
 
     <div class="card" style="max-width: 600px;">
        <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem; padding-bottom:2rem; border-bottom:1px solid var(--border-color);">
-          <img id="profileAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&size=128" style="width:100px; border-radius:1.5rem;">
+          <img id="profileAvatar" src="https://ui-avatars.com/api/?background=3b82f6&color=fff&size=128" style="width:100px; border-radius:1.5rem;">
           <div>
-             <h2 id="profileName">John Doe</h2>
-             <p style="color:var(--text-muted);">Verified Patient</p>
+             <h2 id="profileName">Loading...</h2>
+             <p style="color:var(--text-muted);">Health Account Verified</p>
           </div>
        </div>
 
        <div style="display:grid; gap:1.5rem;">
           <div style="display:flex; flex-direction:column; gap:0.5rem;">
-             <label style="font-weight:600; font-size:0.9rem; color:var(--text-muted);">Account Status</label>
-             <input type="text" value="Active Premium" readonly style="padding:0.75rem; border-radius:0.75rem; border:1px solid var(--border-color); background:#f8fafc; outline:none;">
+             <label style="font-weight:600; font-size:0.9rem; color:var(--text-muted);">Full Name</label>
+             <input type="text" id="pName" readonly style="padding:0.75rem; border-radius:0.75rem; border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main); outline:none;">
           </div>
-          <button class="btn-primary" style="width:fit-content;">Update Profile</button>
        </div>
     </div>
   </main>
 
   <script src="js/medi-assistant.js"></script>
   <script>
-     window.onload = () => {
-        const token = localStorage.getItem("token");
-        const name = localStorage.getItem("name") || "User";
-        if (!token) window.location.href = 'login.html';
-        
-        document.getElementById("profileName").innerText = name;
-        document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&size=128`;
+    window.onload = () => {
+      const token = localStorage.getItem("token");
+      const name = localStorage.getItem("name") || "Guest User";
+      if (!token) window.location.href = "login.html";
 
-        const authLinks = document.getElementById("authLinks");
-        authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
-        document.getElementById("logoutBtn").onclick = () => {
-           localStorage.clear();
-           window.location.href = "login.html";
-        };
-     }
+      const body = document.getElementById("mainBody");
+      const sidebar = document.getElementById("sidebar");
+      const toggleSidebar = document.getElementById("toggleSidebar");
+      const toggleTheme = document.getElementById("toggleTheme");
+
+      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
+
+      toggleTheme.onclick = () => {
+        body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+      };
+
+      toggleSidebar.onclick = () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebar", sidebar.classList.contains("collapsed") ? "collapsed" : "expanded");
+      };
+
+      document.getElementById("profileName").innerText = name;
+      document.getElementById("pName").value = name;
+      document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&size=128`;
+
+      const authLinks = document.getElementById("authLinks");
+      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
+      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+    };
   </script>
 </body>
 </html>

@@ -7,41 +7,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body>
+<body id="mainBody">
 
-  <aside class="app-sidebar">
+  <aside class="app-sidebar" id="sidebar">
     <div class="brand">
-      <i class="ph ph-heartbeat"></i> MediBot
+      <i class="ph ph-heartbeat"></i> <span>MediBot</span>
     </div>
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> Dashboard</a>
-      <a href="appointments.html" class="nav-item active"><i class="ph ph-calendar"></i> Appointments</a>
-      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
-      <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> My Profile</a>
-      <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
+      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> <span>Dashboard</span></a>
+      <a href="appointments.html" class="nav-item active"><i class="ph ph-calendar"></i> <span>Appointments</span></a>
+      <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
+      <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> <span>My Profile</span></a>
       <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
   </aside>
 
   <main class="app-main">
     <div class="top-bar">
-      <div class="welcome-msg">
-        <h1>My Appointments</h1>
-        <p>Manage your upcoming consultations and checkups.</p>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
+        <div class="welcome-msg">
+          <h1>My Appointments</h1>
+          <p>Upcoming consultations and checkups.</p>
+        </div>
       </div>
-      <button class="btn-primary">+ Add New</button>
+      <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
     </div>
 
     <div class="card">
-       <div id="appointmentsList" style="display:flex; flex-direction:column; gap:1rem;">
-          <!-- Placeholder for list -->
-          <div style="padding:1rem; border:1px solid var(--border-color); border-radius:1rem; display:flex; justify-content:space-between; align-items:center;">
+       <button class="btn-primary" style="margin-bottom:1.5rem;">+ Schedule New</button>
+       <div id="appointmentsList">
+          <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
              <div>
-                <h4 style="margin-bottom:0.25rem;">General Physician</h4>
-                <p style="font-size:0.8rem; color:var(--text-muted);">Dr. Sarah Stone • April 24, 2025</p>
+                <h4 style="margin-bottom:0.25rem;">General Checkup</h4>
+                <p style="font-size:0.85rem; color:var(--text-muted);">April 25, 2025 • Dr. Sarah Williams</p>
              </div>
-             <span style="background:#eff6ff; color:var(--primary); padding:0.25rem 0.75rem; border-radius:2rem; font-size:0.75rem; font-weight:600;">Upcoming</span>
+             <span style="background:rgba(59,130,246,0.1); color:var(--primary); padding:0.4rem 0.8rem; border-radius:1rem; font-size:0.75rem; font-weight:700;">CONFIRMED</span>
           </div>
        </div>
     </div>
@@ -49,16 +51,32 @@
 
   <script src="js/medi-assistant.js"></script>
   <script>
-     window.onload = () => {
-        const token = localStorage.getItem("token");
-        if (!token) window.location.href = 'login.html';
-        const authLinks = document.getElementById("authLinks");
-        authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
-        document.getElementById("logoutBtn").onclick = () => {
-           localStorage.clear();
-           window.location.href = "login.html";
-        };
-     }
+    window.onload = () => {
+      const token = localStorage.getItem("token");
+      if (!token) window.location.href = "login.html";
+
+      const body = document.getElementById("mainBody");
+      const sidebar = document.getElementById("sidebar");
+      const toggleSidebar = document.getElementById("toggleSidebar");
+      const toggleTheme = document.getElementById("toggleTheme");
+
+      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
+
+      toggleTheme.onclick = () => {
+        body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+      };
+
+      toggleSidebar.onclick = () => {
+        sidebar.classList.toggle("collapsed");
+        localStorage.setItem("sidebar", sidebar.classList.contains("collapsed") ? "collapsed" : "expanded");
+      };
+
+      const authLinks = document.getElementById("authLinks");
+      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
+      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+    };
   </script>
 </body>
 </html>
