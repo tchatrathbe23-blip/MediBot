@@ -1,385 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Appointments - MediBot</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <style>
-    :root {
-      --bg-sidebar: #0f172a;
-      --bg-main: #020617;
-      --primary: #a855f7;
-      --primary-hover: #9333ea;
-      --secondary: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --danger: #ef4444;
-      --card-bg: #0f172a;
-    }
-
-    body.light-mode {
-      --bg-sidebar: #f8fafc;
-      --bg-main: #ffffff;
-      --primary: #8b5cf6;
-      --primary-hover: #7c3aed;
-      --secondary: #f1f5f9;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --card-bg: #f8fafc;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* --- SIDEBAR --- */
-    .app-sidebar {
-      width: 260px;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem 0;
-      height: 100%;
-      flex-shrink: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0 1.5rem;
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 2rem;
-      color: white;
-    }
-    .brand-icon {
-      background: white;
-      color: var(--bg-main);
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-      margin: 0 1rem 1.5rem 1rem;
-      background-color: rgba(255,255,255,0.03);
-      border-radius: 0.75rem;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    .user-profile img {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .user-info h4 { font-size: 0.95rem; font-weight: 600; }
-    .user-info span { font-size: 0.75rem; color: var(--text-muted); }
-
-    .nav-menu {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      padding: 0 1rem;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      border-radius: 0.5rem;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-
-    .nav-item i { font-size: 1.2rem; }
-
-    .nav-item:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-    }
-
-    .nav-item.active {
-      background-color: var(--primary);
-      color: white;
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
-    }
-
-    .nav-footer {
-      padding: 1rem 1.5rem 0 1.5rem;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    /* --- MAIN CONTENT --- */
-    .app-main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 2rem 3rem;
-    }
-
-    .page-header {
-      margin-bottom: 2rem;
-    }
-    .page-header h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-    }
-
-    .appointments-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .appointment-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 1.5rem;
-      border-radius: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .apt-info h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
-    .apt-info p { color: var(--text-muted); font-size: 0.9rem; }
-
-    .apt-time {
-      text-align: right;
-    }
-    .apt-time span {
-      display: block;
-      color: var(--primary);
-      font-weight: 600;
-    }
-    .apt-time small { color: var(--text-muted); }
-
-    .no-data {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--text-muted);
-    }
-    .no-data i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
-
-    .btn-add {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 2rem;
-    }
-  </style>
 </head>
 <body>
 
   <aside class="app-sidebar">
     <div class="brand">
-      <div class="brand-icon"><i class="ph ph-robot"></i></div>
-      MediBot
+      <i class="ph ph-heartbeat"></i> MediBot
     </div>
-
-    <div class="user-profile">
-      <img src="https://ui-avatars.com/api/?name=User&background=a855f7&color=fff" alt="User Profile">
-      <div class="user-info">
-        <h4>Demo User</h4>
-        <span>Analytics Active</span>
-      </div>
-    </div>
-
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item"><i class="ph ph-file-text"></i> Summary Tool</a>
+      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> Dashboard</a>
       <a href="appointments.html" class="nav-item active"><i class="ph ph-calendar"></i> Appointments</a>
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clock-counter-clockwise"></i> History / Reports</a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> My Profile</a>
       <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
-      <a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>
+      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
-
-    <div class="nav-footer">
-      <a href="#" class="nav-item" id="themeToggle"><i class="ph ph-sun"></i> Light Mode</a>
-    </div>
   </aside>
 
   <main class="app-main">
-    <div class="page-header">
-      <h1>My Appointments</h1>
-      <p>Manage your upcoming doctor visits and consultations</p>
+    <div class="top-bar">
+      <div class="welcome-msg">
+        <h1>My Appointments</h1>
+        <p>Manage your upcoming consultations and checkups.</p>
+      </div>
+      <button class="btn-primary">+ Add New</button>
     </div>
 
-    <div class="appointments-grid">
-      <div class="appointment-card">
-        <div class="apt-info">
-          <h3>General Checkup</h3>
-          <p>Dr. Sarah Johnson • City Medical Center</p>
-        </div>
-        <div class="apt-time">
-          <span>Oct 12, 2024</span>
-          <small>10:30 AM</small>
-        </div>
-      </div>
-
-      <div class="appointment-card">
-        <div class="apt-info">
-          <h3>Blood Test Results</h3>
-          <p>Insight Diagnostics • Lab Scan</p>
-        </div>
-        <div class="apt-time">
-          <span>Oct 15, 2024</span>
-          <small>09:00 AM</small>
-        </div>
-      </div>
+    <div class="card">
+       <div id="appointmentsList" style="display:flex; flex-direction:column; gap:1rem;">
+          <!-- Placeholder for list -->
+          <div style="padding:1rem; border:1px solid var(--border-color); border-radius:1rem; display:flex; justify-content:space-between; align-items:center;">
+             <div>
+                <h4 style="margin-bottom:0.25rem;">General Physician</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Dr. Sarah Stone • April 24, 2025</p>
+             </div>
+             <span style="background:#eff6ff; color:var(--primary); padding:0.25rem 0.75rem; border-radius:2rem; font-size:0.75rem; font-weight:600;">Upcoming</span>
+          </div>
+       </div>
     </div>
-
-    <button class="btn-add" onclick="openAptModal()"><i class="ph ph-plus"></i> Schedule Appointment</button>
   </main>
 
-  <!-- --- MODAL --- -->
-  <div id="aptModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:var(--card-bg); padding:2rem; border-radius:1rem; width:400px; border:1px solid var(--border-color);">
-      <h2 style="margin-bottom:1.5rem;">Schedule Appointment</h2>
-      <input type="text" id="aptTitle" placeholder="Reason (e.g. Checkup)" style="width:100%; padding:0.75rem; margin-bottom:1rem; border-radius:0.5rem; background:var(--bg-main); border:1px solid var(--border-color); color:white;">
-      <input type="text" id="aptDoctor" placeholder="Doctor Name" style="width:100%; padding:0.75rem; margin-bottom:1rem; border-radius:0.5rem; background:var(--bg-main); border:1px solid var(--border-color); color:white;">
-      <input type="date" id="aptDate" style="width:100%; padding:0.75rem; margin-bottom:1rem; border-radius:0.5rem; background:var(--bg-main); border:1px solid var(--border-color); color:white;">
-      <input type="time" id="aptTime" style="width:100%; padding:0.75rem; margin-bottom:1.5rem; border-radius:0.5rem; background:var(--bg-main); border:1px solid var(--border-color); color:white;">
-      
-      <div style="display:flex; gap:1rem;">
-        <button onclick="saveAppointment()" style="flex:1; background:var(--primary); color:white; border:none; padding:0.75rem; border-radius:0.5rem; font-weight:700; cursor:pointer;">Save</button>
-        <button onclick="closeAptModal()" style="flex:1; background:var(--secondary); color:white; border:none; padding:0.75rem; border-radius:0.5rem; cursor:pointer;">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <script src="js/medi-assistant.js"></script>
-
   <script>
-    const API_BASE = "";
-    
-    window.onload = function() {
-      // Theme logic
-      const themeToggle = document.getElementById("themeToggle");
-      if (localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light-mode");
-        themeToggle.innerHTML = '<i class="ph ph-moon"></i> Dark Mode';
-      }
-      themeToggle.addEventListener("click", () => {
-        document.body.classList.toggle("light-mode");
-        const isLight = document.body.classList.contains("light-mode");
-        localStorage.setItem("theme", isLight ? "light" : "dark");
-        themeToggle.innerHTML = isLight ? '<i class="ph ph-moon"></i> Dark Mode' : '<i class="ph ph-sun"></i> Light Mode';
-      });
-
-      // Logout logic
-      document.getElementById("logoutSidebar").addEventListener("click", (e) => {
-        e.preventDefault();
-        localStorage.removeItem("token");
-        localStorage.removeItem("name");
-        window.location.href = "landing.html";
-      });
-
-      // User profile update
-      const userNameDisplay = document.querySelector(".user-info h4");
-      const storedName = localStorage.getItem("name");
-      if (userNameDisplay && storedName) {
-        userNameDisplay.textContent = storedName;
-        const profileImg = document.querySelector(".user-profile img");
-        if (profileImg) profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=a855f7&color=fff`;
-      }
-      
-      fetchAppointments();
-    };
-
-    function openAptModal() { document.getElementById("aptModal").style.display = "flex"; }
-    function closeAptModal() { document.getElementById("aptModal").style.display = "none"; }
-
-    async function saveAppointment() {
-      const data = {
-        title: document.getElementById("aptTitle").value,
-        doctor: document.getElementById("aptDoctor").value,
-        date: document.getElementById("aptDate").value,
-        time: document.getElementById("aptTime").value
-      };
-      const token = localStorage.getItem("token");
-      
-      const res = await fetch("/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": token },
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      if (result.success) {
-        closeAptModal();
-        fetchAppointments();
-      } else {
-        alert("Failed to save");
-      }
-    }
-
-    async function fetchAppointments() {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(`${API_BASE}/appointments`, {
-          headers: { "Authorization": token }
-        });
-        const data = await response.json();
-        const grid = document.querySelector(".appointments-grid");
-        
-        if (data.success && data.appointments.length > 0) {
-          grid.innerHTML = data.appointments.map(apt => `
-            <div class="appointment-card">
-              <div class="apt-info">
-                <h3>${apt.title}</h3>
-                <p>${apt.doctor} • ${apt.location || "Prescribed Location"}</p>
-              </div>
-              <div class="apt-time">
-                <span>${apt.date}</span>
-                <small>${apt.time}</small>
-              </div>
-            </div>
-          `).join("");
-        } else {
-          grid.innerHTML = '<div class="no-data"><i class="ph ph-calendar-blank"></i><p>No upcoming appointments found.</p></div>';
-        }
-      } catch (err) {
-        console.error("Fetch Error:", err);
-      }
-    }
+     window.onload = () => {
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = 'login.html';
+        const authLinks = document.getElementById("authLinks");
+        authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
+        document.getElementById("logoutBtn").onclick = () => {
+           localStorage.clear();
+           window.location.href = "login.html";
+        };
+     }
   </script>
 </body>
 </html>

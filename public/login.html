@@ -2,204 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MediBot | Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>Login - MediBot</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    :root {
-      --bg-main: #020617;
-      --primary: #a855f7;
-      --primary-hover: #9333ea;
-      --secondary: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --card-bg: #0f172a;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .login-container {
-      width: 100%;
-      max-width: 420px;
-      padding: 2.5rem;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 1.5rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
-    .brand-icon {
-      background: var(--primary);
-      color: white;
-      border-radius: 1rem;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
-    }
-    .brand h1 { font-size: 1.75rem; font-weight: 800; color: white; }
-    .brand p { color: var(--text-muted); font-size: 0.9rem; }
-
-    .form-group { margin-bottom: 1.5rem; }
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.5rem;
-    }
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .input-wrapper i {
-      position: absolute;
-      left: 1rem;
-      color: var(--text-muted);
-      font-size: 1.2rem;
-    }
-    .input-wrapper input {
-      width: 100%;
-      padding: 0.85rem 1rem 0.85rem 3rem;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: 0.75rem;
-      color: white;
-      font-family: inherit;
-      outline: none;
-      transition: 0.2s;
-    }
-    .input-wrapper input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
-    }
-
-    .btn-login {
-      width: 100%;
-      padding: 1rem;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 0.75rem;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: 1rem;
-    }
-    .btn-login:hover { background: var(--primary-hover); transform: translateY(-1px); }
-
-    .footer {
-      margin-top: 2rem;
-      text-align: center;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-    .footer a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: 0.2s;
-    }
-    .footer a:hover { color: var(--primary-hover); }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    body { display: flex; align-items: center; justify-content: center; background: #f8fafc; height: 100vh; }
+    .auth-card { width: 100%; max-width: 400px; padding: 2.5rem; text-align: center; }
+    .form-group { text-align: left; margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
+    .form-group input { width: 100%; padding: 0.8rem; border-radius: 0.75rem; border: 1px solid var(--border-color); outline: none; }
+    .form-group input:focus { border-color: var(--primary); }
   </style>
 </head>
 <body>
 
-  <div class="login-container">
-    <div class="brand">
-      <div class="brand-icon"><i class="ph ph-robot"></i></div>
-      <h1>Welcome Back</h1>
-      <p>Enter your credentials to access your dashboard</p>
+  <div class="card auth-card">
+    <div class="brand" style="justify-content:center; padding:0; margin-bottom:1.5rem;">
+      <i class="ph ph-heartbeat"></i> MediBot
     </div>
+    <h2 style="margin-bottom:0.5rem;">Access Portal</h2>
+    <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.9rem;">Please enter your credentials to manage your health.</p>
 
     <form id="loginForm">
       <div class="form-group">
-        <label>USERNAME</label>
-        <div class="input-wrapper">
-          <i class="ph ph-user"></i>
-          <input type="text" id="name" placeholder="Enter your name" required autocomplete="username">
-        </div>
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="John Doe" required>
       </div>
-
       <div class="form-group">
-        <label>PASSWORD</label>
-        <div class="input-wrapper">
-          <i class="ph ph-lock"></i>
-          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
-        </div>
+        <label>Passphrase</label>
+        <input type="password" id="password" placeholder="••••••••" required>
       </div>
-
-      <button type="submit" class="btn-login">Sign In</button>
+      <button type="submit" class="btn-primary" style="width:100%; margin-top:1rem;">Sign In</button>
     </form>
 
-    <div class="footer">
-      Don't have an account? <a href="signup.html">Create Account</a>
-    </div>
+    <p style="margin-top:1.5rem; font-size:0.9rem; color:var(--text-muted);">
+      New here? <a href="signup.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Create Account</a>
+    </p>
   </div>
 
   <script>
-    const API_BASE = "";
-
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    document.getElementById("loginForm").onsubmit = async (e) => {
       e.preventDefault();
-      const loginBtn = e.target.querySelector("button");
-      loginBtn.innerText = "Authenticating...";
-      loginBtn.disabled = true;
-
-      const name = document.getElementById("name").value.trim();
+      const name = document.getElementById("name").value;
       const password = document.getElementById("password").value;
 
       try {
-        const response = await fetch(`${API_BASE}/login`, {
+        const res = await fetch("/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, password }),
+          body: JSON.stringify({ name, password })
         });
-
-        const data = await response.json();
-
-        if (data.success && data.token) {
+        const data = await res.json();
+        if (data.success) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("name", data.name);
           window.location.href = "index.html";
         } else {
-          alert(data.message || "Invalid credentials");
-          loginBtn.innerText = "Sign In";
-          loginBtn.disabled = false;
+          alert(data.message);
         }
       } catch (err) {
-        console.error(err);
-        alert("Server error. Please try again.");
-        loginBtn.innerText = "Sign In";
-        loginBtn.disabled = false;
+        alert("Login failed. Check connection.");
       }
-    });
+    };
   </script>
 </body>
 </html>

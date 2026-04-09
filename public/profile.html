@@ -1,349 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>My Profile - MediBot</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <style>
-    :root {
-      --bg-sidebar: #0f172a;
-      --bg-main: #020617;
-      --primary: #a855f7;
-      --primary-hover: #9333ea;
-      --secondary: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --danger: #ef4444;
-      --card-bg: #0f172a;
-    }
-
-    body.light-mode {
-      --bg-sidebar: #f8fafc;
-      --bg-main: #ffffff;
-      --primary: #8b5cf6;
-      --primary-hover: #7c3aed;
-      --secondary: #f1f5f9;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --card-bg: #f8fafc;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* --- SIDEBAR --- */
-    .app-sidebar {
-      width: 260px;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem 0;
-      height: 100%;
-      flex-shrink: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0 1.5rem;
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 2rem;
-      color: white;
-    }
-    .brand-icon {
-      background: white;
-      color: var(--bg-main);
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-      margin: 0 1rem 1.5rem 1rem;
-      background-color: rgba(255,255,255,0.03);
-      border-radius: 0.75rem;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    .user-profile img {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .user-info h4 { font-size: 0.95rem; font-weight: 600; }
-    .user-info span { font-size: 0.75rem; color: var(--text-muted); }
-
-    .nav-menu {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      padding: 0 1rem;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      border-radius: 0.5rem;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-
-    .nav-item i { font-size: 1.2rem; }
-
-    .nav-item:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-    }
-
-    .nav-item.active {
-      background-color: var(--primary);
-      color: white;
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
-    }
-
-    .nav-footer {
-      padding: 1rem 1.5rem 0 1.5rem;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    /* --- MAIN CONTENT --- */
-    .app-main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 2rem 3rem;
-    }
-
-    .page-header {
-      margin-bottom: 2rem;
-    }
-    .page-header h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-    }
-
-    .profile-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 2rem;
-      border-radius: 1rem;
-      max-width: 600px;
-    }
-
-    .profile-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .profile-header img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 4px solid var(--primary);
-    }
-
-    .profile-header h2 { font-size: 1.5rem; }
-
-    .profile-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .form-group label {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .form-group input {
-      background: var(--secondary);
-      border: 1px solid var(--border-color);
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
-      color: white;
-      font-family: inherit;
-    }
-
-    .btn-save {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
 <body>
 
   <aside class="app-sidebar">
     <div class="brand">
-      <div class="brand-icon"><i class="ph ph-robot"></i></div>
-      MediBot
+      <i class="ph ph-heartbeat"></i> MediBot
     </div>
-
-    <div class="user-profile">
-      <img src="https://ui-avatars.com/api/?name=User&background=a855f7&color=fff" alt="User Profile">
-      <div class="user-info">
-        <h4>Demo User</h4>
-        <span>Analytics Active</span>
-      </div>
-    </div>
-
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item"><i class="ph ph-file-text"></i> Summary Tool</a>
+      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> Dashboard</a>
       <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> Appointments</a>
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clock-counter-clockwise"></i> History / Reports</a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
       <a href="profile.html" class="nav-item active"><i class="ph ph-user"></i> My Profile</a>
       <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
-      <a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>
+      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
-
-    <div class="nav-footer">
-      <a href="#" class="nav-item" id="themeToggle"><i class="ph ph-sun"></i> Light Mode</a>
-    </div>
   </aside>
 
   <main class="app-main">
-    <div class="page-header">
-      <h1>My Profile</h1>
-      <p>Manage your account settings and health profile</p>
+    <div class="top-bar">
+      <div class="welcome-msg">
+        <h1>My Profile</h1>
+        <p>Manage your personal information and security settings.</p>
+      </div>
     </div>
 
-    <div class="profile-card">
-      <div class="profile-header">
-        <img id="mainProfilePic" src="https://ui-avatars.com/api/?name=User&background=a855f7&color=fff" alt="Profile Picture">
-        <h2 id="mainProfileName">Demo User</h2>
-      </div>
+    <div class="card" style="max-width: 600px;">
+       <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem; padding-bottom:2rem; border-bottom:1px solid var(--border-color);">
+          <img id="profileAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff&size=128" style="width:100px; border-radius:1.5rem;">
+          <div>
+             <h2 id="profileName">John Doe</h2>
+             <p style="color:var(--text-muted);">Verified Patient</p>
+          </div>
+       </div>
 
-      <div class="profile-form">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="profileNameInput" value="Demo User">
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" value="user@example.com" disabled>
-        </div>
-        <div class="form-group">
-          <label>Member Since</label>
-          <input type="text" value="October 2024" disabled>
-        </div>
-        
-        <button class="btn-save" onclick="saveProfileChanges()">Save Changes</button>
-      </div>
+       <div style="display:grid; gap:1.5rem;">
+          <div style="display:flex; flex-direction:column; gap:0.5rem;">
+             <label style="font-weight:600; font-size:0.9rem; color:var(--text-muted);">Account Status</label>
+             <input type="text" value="Active Premium" readonly style="padding:0.75rem; border-radius:0.75rem; border:1px solid var(--border-color); background:#f8fafc; outline:none;">
+          </div>
+          <button class="btn-primary" style="width:fit-content;">Update Profile</button>
+       </div>
     </div>
   </main>
 
   <script src="js/medi-assistant.js"></script>
-
   <script>
-    window.onload = function() {
-      // Theme logic
-      const themeToggle = document.getElementById("themeToggle");
-      if (localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light-mode");
-        themeToggle.innerHTML = '<i class="ph ph-moon"></i> Dark Mode';
-      }
-      themeToggle.addEventListener("click", () => {
-        document.body.classList.toggle("light-mode");
-        const isLight = document.body.classList.contains("light-mode");
-        localStorage.setItem("theme", isLight ? "light" : "dark");
-        themeToggle.innerHTML = isLight ? '<i class="ph ph-moon"></i> Dark Mode' : '<i class="ph ph-sun"></i> Light Mode';
-      });
+     window.onload = () => {
+        const token = localStorage.getItem("token");
+        const name = localStorage.getItem("name") || "User";
+        if (!token) window.location.href = 'login.html';
+        
+        document.getElementById("profileName").innerText = name;
+        document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&size=128`;
 
-      // Logout logic
-      document.getElementById("logoutSidebar").addEventListener("click", (e) => {
-        e.preventDefault();
-        localStorage.removeItem("token");
-        localStorage.removeItem("name");
-        window.location.href = "landing.html";
-      });
-
-      // User profile update
-      const userNameDisplay = document.querySelector(".user-info h4");
-      const storedName = localStorage.getItem("name");
-      if (storedName) {
-        document.getElementById("profileNameInput").value = storedName;
-        document.getElementById("mainProfileName").textContent = storedName;
-        userNameDisplay.textContent = storedName;
-        const profilePics = [document.querySelector(".user-profile img"), document.getElementById("mainProfilePic")];
-        profilePics.forEach(img => {
-          if (img) img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=a855f7&color=fff`;
-        });
-      }
-    };
-
-    async function saveProfileChanges() {
-      const newName = document.getElementById("profileNameInput").value;
-      const token = localStorage.getItem("token");
-      
-      try {
-        const res = await fetch("/update-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": token },
-          body: JSON.stringify({ name: newName })
-        });
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem("name", newName);
-          alert("Profile updated successfully!");
-          location.reload();
-        }
-      } catch (err) {
-        alert("Update failed");
-      }
-    }
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.clear();
-      window.location.href = 'login.html';
-    });
+        const authLinks = document.getElementById("authLinks");
+        authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
+        document.getElementById("logoutBtn").onclick = () => {
+           localStorage.clear();
+           window.location.href = "login.html";
+        };
+     }
   </script>
 </body>
 </html>

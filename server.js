@@ -25,6 +25,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
+// INCREASE TIMEOUTS for Render
+const server = app.listen(process.env.PORT || 3000, () => {
+  console.log(`🔥 Server running on port ${process.env.PORT || 3000}`);
+});
+server.timeout = 120000; // 2 minutes
+server.keepAliveTimeout = 120000;
+
 // --------------------------------------------------
 // 🌍 CONNECT TO MONGODB ATLAS
 // --------------------------------------------------
@@ -37,7 +44,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 // --------------------------------------------------
 // 📂 File Upload Setup
@@ -554,8 +561,4 @@ Rules:
   }
 });
 
-// --------------------------------------------------
-// 🚀 START SERVER
-// --------------------------------------------------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🔥 Server running on port ${PORT}`));
+// Server already listening at the top with timeout set

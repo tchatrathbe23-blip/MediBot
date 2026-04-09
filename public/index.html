@@ -1,113 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>MediBot Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediBot - Professional Health Dashboard</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    :root {
-      --bg-sidebar: #0f172a;
-      --bg-main: #020617;
-      --primary: #a855f7;
-      --primary-hover: #9333ea;
-      --secondary: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --danger: #ef4444;
-      --card-bg: #0f172a;
+    /* Specific to Uploader */
+    .uploader-zone {
+      border: 2px dashed #e2e8f0;
+      border-radius: 1.25rem;
+      padding: 3rem;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: #f8fafc;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-
-    .app-sidebar { width: 260px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 1.5rem 0; }
-    .brand { display: flex; align-items: center; gap: 0.75rem; padding: 0 1.5rem; font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; color: white; }
-    .brand-icon { background: var(--primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
-
-    .user-profile { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem; margin: 0 1rem 2rem 1rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.05); }
-    #sidebarAvatar { width: 40px; height: 40px; border-radius: 50%; }
-    .user-info h4 { font-size: 0.95rem; font-weight: 600; }
-    .user-info span { font-size: 0.75rem; color: var(--text-muted); }
-
-    .nav-menu { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; padding: 0 1rem; }
-    .nav-item { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; color: var(--text-muted); text-decoration: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 500; transition: 0.2s; }
-    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-    .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
-
-    .app-main { flex: 1; overflow-y: auto; padding: 2.5rem 4rem; position: relative; }
-    .top-auth { position: absolute; top: 2rem; right: 4rem; display: flex; gap: 1.5rem; z-index: 10; }
-    .top-auth a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
-    .top-auth a:hover { color: var(--primary); }
-
-    .header-section { margin-bottom: 3rem; }
-    .header-section h1 { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem; }
-    .header-section p { color: var(--text-muted); font-size: 1.1rem; }
-
-    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 1.25rem; padding: 2.5rem; max-width: 900px; margin: 0 auto; }
-    .uploader { border: 2px dashed rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.02); border-radius: 1rem; padding: 4rem; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
-    .uploader:hover { border-color: var(--primary); background: rgba(168, 85, 247, 0.06); }
-    .uploader i { font-size: 4rem; color: var(--primary); }
-
-    .btn-primary { background: var(--primary); color: white; border: none; width: 100%; padding: 1.25rem; border-radius: 0.75rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-    #loadingOverlay { display: none; text-align: center; margin-top: 2rem; color: var(--primary); }
-    #analysisResult { margin-top: 2.5rem; display: none; line-height: 1.8; animation: fadeIn 0.5s ease; color: #cbd5e1; }
-    #analysisResult h2 { color: var(--primary); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .uploader-zone:hover { border-color: var(--primary); background: #eff6ff; }
+    
+    #loadingOverlay {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+    #analysisResult {
+      display: none;
+      margin-top: 2rem;
+      line-height: 1.6;
+    }
+    #analysisResult h2 { color: var(--primary); margin-bottom: 1rem; }
   </style>
 </head>
 <body>
 
   <aside class="app-sidebar">
-    <div class="brand"><div class="brand-icon"><i class="ph ph-robot"></i></div> MediBot</div>
-    <div class="user-profile">
-      <img src="https://ui-avatars.com/api/?name=User&background=a855f7&color=fff" id="sidebarAvatar">
-      <div class="user-info"><h4 id="sidebarName">Demo User</h4><span>Secure Session</span></div>
+    <div class="brand">
+      <i class="ph ph-heartbeat"></i> MediBot
     </div>
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item active"><i class="ph ph-file-text"></i> Summary Tool</a>
+      <a href="index.html" class="nav-item active"><i class="ph ph-grid-four"></i> Dashboard</a>
       <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> Appointments</a>
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clock-counter-clockwise"></i> My Reports</a>
+      <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> Clinical History</a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> My Profile</a>
       <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
+      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
     </nav>
   </aside>
 
   <main class="app-main">
-    <div class="top-auth" id="authLinks">
-      <a href="login.html">Login</a>
-      <a href="signup.html">Signup</a>
+    <div class="top-bar">
+      <div class="welcome-msg">
+        <h1 id="sidebarName">Welcome back, User</h1>
+        <p>Your AI-powered medical insights are waiting.</p>
+      </div>
+      <div class="user-pill card" style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem;">
+         <img id="sidebarAvatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" style="width:32px; border-radius:50%;">
+         <span style="font-weight:600;">Secure Session</span>
+      </div>
     </div>
 
-    <div class="header-section">
-      <h1>Medical Insight Analyzer</h1>
-      <p>Instant precision analysis for your healthcare reports.</p>
-    </div>
-
-    <section class="card">
-      <label class="uploader" id="dropZone">
-        <i class="ph ph-cloud-arrow-up"></i>
-        <div>
-          <p style="font-weight:700; font-size:1.25rem; color:white;">Select Report to Analyze</p>
-          <p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;">PDF, Image, or Word Document</p>
-        </div>
+    <div class="card" style="margin-bottom: 2rem;">
+      <h2 style="margin-bottom: 1.5rem; font-size:1.25rem;">Analyze New Medical Record</h2>
+      <div class="uploader-zone" id="dropZone">
+        <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom:0.5rem;">Drop report here or click to browse</h3>
+        <p style="color: var(--text-muted); font-size:0.9rem;">Supports PDF, Images, and DOCX records</p>
         <input type="file" id="fileInput" hidden>
-      </label>
-
-      <button class="btn-primary" id="analyzeBtn">Analyze Record Now</button>
-
+      </div>
+      
       <div id="loadingOverlay">
-        <i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-        <p style="font-weight:600;">Deep Scanning Document...</p>
+        <i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <p style="font-weight:600;">Processing Clinical Data...</p>
       </div>
 
-      <div id="analysisResult"></div>
-    </section>
+      <div id="analysisResult" class="card" style="background: #f8fafc; border:none; margin-top:1.5rem;"></div>
+
+      <div style="margin-top:1.5rem; display:flex; justify-content:flex-end;">
+        <button class="btn-primary" id="analyzeBtn" disabled>Analyze Clinical Record</button>
+      </div>
+    </div>
+
+    <div class="card">
+       <h3 style="margin-bottom:1rem;">Health Tip of the Day</h3>
+       <p style="color:var(--text-muted);">Maintaining a consistent sleep schedule of 7-8 hours significantly improves mental clarity and hormonal balance.</p>
+    </div>
   </main>
 
   <script src="js/medi-assistant.js"></script>
@@ -116,100 +95,88 @@
       const token = localStorage.getItem("token");
       const name = localStorage.getItem("name") || "Guest User";
       const authLinks = document.getElementById("authLinks");
-      const dropZone = document.getElementById("dropZone");
-      const fileInput = document.getElementById("fileInput");
       const analyzeBtn = document.getElementById("analyzeBtn");
-      const loading = document.getElementById("loadingOverlay");
+      const fileInput = document.getElementById("fileInput");
+      const dropZone = document.getElementById("dropZone");
       const resultArea = document.getElementById("analysisResult");
+      const loading = document.getElementById("loadingOverlay");
 
-      let selectedFile = null;
+      if (!token) window.location.href = "login.html";
+      document.getElementById("sidebarName").innerText = "Welcome, " + name;
 
-      dropZone.onclick = () => fileInput.click();
+      let currentFile = null;
 
-      fileInput.onchange = (e) => {
-        if (e.target.files.length > 0) {
-          selectedFile = e.target.files[0];
-          document.querySelector('.uploader p').innerText = selectedFile.name;
-        }
+      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>`;
+      document.getElementById("logoutBtn").onclick = () => {
+        localStorage.clear();
+        window.location.href = "login.html";
       };
 
-      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = "var(--primary)"; };
-      dropZone.ondragleave = () => { dropZone.style.borderColor = "rgba(255,255,255,0.1)"; };
+      // File Selection logic
+      dropZone.onclick = () => fileInput.click();
+      fileInput.onchange = (e) => handleFile(e.target.files[0]);
+      
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.background = "#eff6ff"; };
+      dropZone.ondragleave = () => { dropZone.style.background = "#f8fafc"; };
       dropZone.ondrop = (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "rgba(255,255,255,0.1)";
-        if (e.dataTransfer.files.length) {
-          selectedFile = e.dataTransfer.files[0];
-          document.querySelector('.uploader p').innerText = selectedFile.name;
-        }
+        dropZone.style.background = "#f8fafc";
+        handleFile(e.dataTransfer.files[0]);
       };
 
-      if (token) {
-        authLinks.innerHTML = `<a href="#" id="logoutBtn" style="color:var(--danger)">Logout</a>`;
-        document.getElementById("logoutBtn").onclick = (e) => {
-          e.preventDefault();
-          localStorage.clear();
-          window.location.href = "login.html";
-        };
-        document.getElementById("sidebarName").innerText = name;
-        document.getElementById("sidebarAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff`;
+      function handleFile(file) {
+        if (!file) return;
+        currentFile = file;
+        document.querySelector('.uploader-zone h3').innerText = file.name;
+        document.querySelector('.uploader-zone p').innerText = "File selected and ready for analysis";
+        analyzeBtn.disabled = false;
       }
 
       analyzeBtn.onclick = async () => {
-        if (!selectedFile) return alert("Please select a file first.");
-
-        const token = localStorage.getItem("token");
-        if (!token) return window.location.href = "login.html";
+        if (!currentFile) return;
 
         loading.style.display = "block";
         resultArea.style.display = "none";
         analyzeBtn.disabled = true;
 
         const fd = new FormData();
-        fd.append("file", selectedFile);
+        fd.append("file", currentFile);
 
         try {
-          const res = await fetch("/analyze", { 
-            method: "POST", 
-            headers: { "Authorization": token }, 
-            body: fd 
+          const res = await fetch("/analyze", {
+            method: "POST",
+            headers: { "Authorization": token },
+            body: fd
           });
-          
           const data = await res.json();
           loading.style.display = "none";
 
           if (data.success) {
             resultArea.style.display = "block";
-            resultArea.innerHTML = `<h2>Analysis Result</h2><div>${data.insight.replace(/\n/g, "<br>")}</div>`;
+            resultArea.innerHTML = `<h2>Analysis Insight</h2><div>${data.insight.split('\n').join('<br>')}</div>`;
             analyzeBtn.disabled = false;
-            analyzeBtn.innerText = "Analyze Record Now";
+            // Helpfully open the chat bot
             setTimeout(() => document.getElementById('mediBubble').click(), 500);
           } else if (res.status === 429) {
-            let seconds = 60;
-            const interval = setInterval(() => {
-              analyzeBtn.innerText = `Quota Busy: Wait ${seconds}s`;
-              analyzeBtn.style.opacity = "0.6";
-              analyzeBtn.disabled = true;
-              seconds--;
-              if (seconds < 0) {
-                clearInterval(interval);
-                analyzeBtn.disabled = false;
-                analyzeBtn.style.opacity = "1";
-                analyzeBtn.innerText = "Analyze Record Now";
-              }
-            }, 1000);
-            alert("Google AI is temporarily busy. Please wait for the countdown.");
+             let seconds = 60;
+             const interval = setInterval(() => {
+                analyzeBtn.innerText = `AI Busy: Waiting ${seconds}s`;
+                seconds--;
+                if (seconds < 0) {
+                   clearInterval(interval);
+                   analyzeBtn.disabled = false;
+                   analyzeBtn.innerText = "Analyze Clinical Record";
+                }
+             }, 1000);
+             alert("AI Quota hit. Please wait for the timer on the button.");
           } else {
             analyzeBtn.disabled = false;
-            analyzeBtn.innerText = "Analyze Record Now";
-            alert("Server Error: " + (data.insight || "No file received by server"));
+            alert("Analysis failed: " + (data.insight || "Server error"));
           }
         } catch (err) {
           loading.style.display = "none";
           analyzeBtn.disabled = false;
-          analyzeBtn.innerText = "Analyze Record Now";
           alert("Network error. Please try again.");
-          console.error(err);
         }
       };
     };
