@@ -122,11 +122,14 @@
       const loading = document.getElementById("loadingOverlay");
       const resultArea = document.getElementById("analysisResult");
 
+      let selectedFile = null;
+
       dropZone.onclick = () => fileInput.click();
 
-      fileInput.onchange = () => {
-        if (fileInput.files.length > 0) {
-          document.querySelector('.uploader p').innerText = fileInput.files[0].name;
+      fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) {
+          selectedFile = e.target.files[0];
+          document.querySelector('.uploader p').innerText = selectedFile.name;
         }
       };
 
@@ -136,8 +139,8 @@
         e.preventDefault();
         dropZone.style.borderColor = "rgba(255,255,255,0.1)";
         if (e.dataTransfer.files.length) {
-          fileInput.files = e.dataTransfer.files;
-          document.querySelector('.uploader p').innerText = e.dataTransfer.files[0].name;
+          selectedFile = e.dataTransfer.files[0];
+          document.querySelector('.uploader p').innerText = selectedFile.name;
         }
       };
 
@@ -153,8 +156,7 @@
       }
 
       analyzeBtn.onclick = async () => {
-        const file = fileInput.files[0];
-        if (!file) return alert("Please select a file.");
+        if (!selectedFile) return alert("Please select a file first.");
 
         const token = localStorage.getItem("token");
         if (!token) return window.location.href = "login.html";
@@ -164,23 +166,25 @@
         analyzeBtn.disabled = true;
 
         const fd = new FormData();
-        fd.append("file", file);
+        fd.append("file", selectedFile);
 
         try {
-          const res = await fetch("/analyze", { method: "POST", headers: { "Authorization": token }, body: fd });
+          const res = await fetch("/analyze", { 
+            method: "POST", 
+            headers: { "Authorization": token }, 
+            body: fd 
+          });
+          
           const data = await res.json();
           loading.style.display = "none";
 
           if (data.success) {
             resultArea.style.display = "block";
             resultArea.innerHTML = `<h2>Analysis Result</h2><div>${data.insight.replace(/\n/g, "<br>")}</div>`;
-            // Reset button
             analyzeBtn.disabled = false;
             analyzeBtn.innerText = "Analyze Record Now";
-            // Open assistant automatically
             setTimeout(() => document.getElementById('mediBubble').click(), 500);
           } else if (res.status === 429) {
-            // Safety Lock Logic: 60 seconds countdown
             let seconds = 60;
             const interval = setInterval(() => {
               analyzeBtn.innerText = `Quota Busy: Wait ${seconds}s`;
@@ -194,11 +198,11 @@
                 analyzeBtn.innerText = "Analyze Record Now";
               }
             }, 1000);
-            alert("Google AI is temporarily busy. Please wait for the countdown on the button before trying again.");
+            alert("Google AI is temporarily busy. Please wait for the countdown.");
           } else {
             analyzeBtn.disabled = false;
             analyzeBtn.innerText = "Analyze Record Now";
-            alert("Error: " + (data.insight || "Unknown error"));
+            alert("Server Error: " + (data.insight || "No file received by server"));
           }
         } catch (err) {
           loading.style.display = "none";
