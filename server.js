@@ -54,22 +54,26 @@ const upload = multer({ dest: uploadDir });
 // 🔐 AUTH MIDDLEWARE
 // --------------------------------------------------
 const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"];
+  let token = req.headers["authorization"];
+
   if (!token) {
-    console.log("Auth Error: No token provided");
-    return res.status(403).json({ message: "No token provided." });
+    return res.status(200).json({ success: false, message: "No token provided." });
+  }
+
+  // Handle "Bearer <token>" format
+  if (token.startsWith("Bearer ")) {
+    token = token.slice(7);
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      console.log("Auth Error: Invalid token");
-      return res.status(401).json({ message: "Failed to authenticate token." });
+      console.log("Auth Error:", err.message);
+      return res.status(200).json({ success: false, message: "Session expired. Please login again." });
     }
     req.userId = decoded.id;
     next();
   });
 };
-
 app.post("/signup", async (req, res) => {
   console.log("POST: signup");
 
@@ -448,6 +452,15 @@ app.post("/appointments", verifyToken, async (req, res) => {
   }
 });
 
+app.delete("/appointments/:id", verifyToken, async (req, res) => {
+  try {
+    await Appointment.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    res.json({ success: true, message: "Appointment deleted" });
+  } catch (err) {
+    res.json({ success: false, message: "Delete failed" });
+  }
+});
+
 // --------------------------------------------------
 // 💊 MEDICATIONS
 // --------------------------------------------------
@@ -467,6 +480,15 @@ app.post("/medications", verifyToken, async (req, res) => {
     res.json({ success: true, medication: med });
   } catch (err) {
     res.json({ success: false, message: "Error saving medication" });
+  }
+});
+
+app.delete("/medications/:id", verifyToken, async (req, res) => {
+  try {
+    await Medication.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    res.json({ success: true, message: "Medication deleted" });
+  } catch (err) {
+    res.json({ success: false, message: "Delete failed" });
   }
 });
 

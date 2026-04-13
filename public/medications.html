@@ -6,6 +6,21 @@
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    (function() {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+    })();
+  </script>
+  <style>
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 1.25rem; width: 100%; max-width: 500px; border: 1px solid var(--border-color); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted); }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; font-family: inherit; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  </style>
 </head>
 <body id="mainBody">
 
@@ -36,38 +51,106 @@
     </div>
 
     <div class="card">
+       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h2 style="font-size:1.2rem;">Medication Tracker</h2>
+          <button class="btn-primary" id="openModalBtn">+ Add Medication</button>
+       </div>
+
        <div id="medsList">
-          <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-             <div style="display:flex; align-items:center; gap:1rem;">
-                <i class="ph ph-pill" style="font-size:1.5rem; color:var(--primary);"></i>
-                <div>
-                  <h4 style="margin-bottom:0.25rem;">Vitamin C</h4>
-                  <p style="font-size:0.85rem; color:var(--text-muted);">500mg • Once per day</p>
-                </div>
-             </div>
-             <i class="ph ph-check-circle" style="color:var(--success); font-size:1.5rem;"></i>
-          </div>
+          <p style="color:var(--text-muted); text-align:center; padding:2rem;">Fetching your medications...</p>
        </div>
     </div>
   </main>
 
+  <!-- Medication Modal -->
+  <div id="medModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="font-size:1.25rem;">New Medication</h2>
+        <button class="icon-btn" id="closeModalBtn"><i class="ph ph-x"></i></button>
+      </div>
+      <form id="medForm">
+        <div class="form-group">
+          <label>Medication Name</label>
+          <input type="text" id="medName" placeholder="e.g. Paracetamol" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>Dosage</label>
+            <input type="text" id="medDosage" placeholder="e.g. 500mg" required>
+          </div>
+          <div class="form-group">
+            <label>Schedule</label>
+            <input type="text" id="medSchedule" placeholder="e.g. Twice daily" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Special Notes</label>
+          <textarea id="medNotes" placeholder="e.g. Take after meals" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:1rem;">Save Medication</button>
+      </form>
+    </div>
+  </div>
+
   <script src="js/medi-assistant.js"></script>
   <script>
+    const token = localStorage.getItem("token");
+
+    async function fetchMedications() {
+      const list = document.getElementById("medsList");
+      try {
+        const res = await fetch("/medications", { headers: { "Authorization": token } });
+        const data = await res.json();
+        
+        if (data.success && data.medications.length > 0) {
+          list.innerHTML = data.medications.map(m => `
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding: 1rem;">
+               <div style="display:flex; align-items:center; gap:1rem;">
+                  <div style="background:rgba(34,197,94,0.1); color:var(--success); width:40px; height:40px; border-radius:0.75rem; display:flex; align-items:center; justify-content:center;">
+                     <i class="ph ph-pill" style="font-size:1.4rem;"></i>
+                  </div>
+                  <div>
+                    <h4 style="margin-bottom:0.2rem;">${m.name}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted);">${m.dosage} • ${m.schedule} ${m.notes ? '• ' + m.notes : ''}</p>
+                  </div>
+               </div>
+               <button class="icon-btn" onclick="deleteMed('${m._id}')" style="color:var(--danger); border-color:transparent; background:transparent;">
+                  <i class="ph ph-trash"></i>
+               </button>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem;">No medications tracked yet.</p>`;
+        }
+      } catch (err) {
+        list.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load medications.</p>`;
+      }
+    }
+
+    async function deleteMed(id) {
+      if(!confirm("Are you sure you want to remove this medication?")) return;
+      await fetch(`/medications/${id}`, { method: 'DELETE', headers: { "Authorization": token } });
+      fetchMedications();
+    }
+
     window.onload = () => {
-      const token = localStorage.getItem("token");
       if (!token) window.location.href = "login.html";
 
-      const body = document.getElementById("mainBody");
       const sidebar = document.getElementById("sidebar");
       const toggleSidebar = document.getElementById("toggleSidebar");
       const toggleTheme = document.getElementById("toggleTheme");
 
-      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (document.documentElement.classList.contains("dark-mode")) {
+        toggleTheme.innerHTML = '<i class="ph ph-sun"></i>';
+      }
+
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
 
       toggleTheme.onclick = () => {
-        body.classList.toggle("dark-mode");
-        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+        const isDark = document.documentElement.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        toggleTheme.innerHTML = isDark ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
       };
 
       toggleSidebar.onclick = () => {
@@ -78,6 +161,38 @@
       const authLinks = document.getElementById("authLinks");
       authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
       document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+
+      // Modal Logic
+      const modal = document.getElementById("medModal");
+      document.getElementById("openModalBtn").onclick = () => modal.style.display = "flex";
+      document.getElementById("closeModalBtn").onclick = () => modal.style.display = "none";
+      window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; };
+
+      // Form Logic
+      document.getElementById("medForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+          name: document.getElementById("medName").value,
+          dosage: document.getElementById("medDosage").value,
+          schedule: document.getElementById("medSchedule").value,
+          notes: document.getElementById("medNotes").value
+        };
+
+        const res = await fetch("/medications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": token },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        if(data.success) {
+          modal.style.display = "none";
+          document.getElementById("medForm").reset();
+          fetchMedications();
+        }
+      };
+
+      fetchMedications();
     };
   </script>
 </body>

@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    (function() {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+    })();
+  </script>
   <style>
     .uploader-zone {
       border: 2px dashed var(--border-color);
@@ -133,9 +139,9 @@
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
 
       toggleTheme.onclick = () => {
-        body.classList.toggle("dark-mode");
-        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
-        toggleTheme.innerHTML = body.classList.contains("dark-mode") ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+        const isDark = document.documentElement.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        toggleTheme.innerHTML = isDark ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
       };
 
       toggleSidebar.onclick = () => {

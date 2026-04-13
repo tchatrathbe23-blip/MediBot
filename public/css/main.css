@@ -12,7 +12,7 @@
 }
 
 /* --- Dark Mode Variables --- */
-body.dark-mode {
+html.dark-mode {
   --bg-main: #0f172a;/* Slate 900 */
   --card-bg: #1e293b;/* Slate 800 */
   --text-main: #f8fafc;

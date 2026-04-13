@@ -6,6 +6,12 @@
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    (function() {
+      const theme = localStorage.getItem("theme");
+      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+    })();
+  </script>
 </head>
 <body id="mainBody">
 
@@ -44,11 +50,18 @@
           </div>
        </div>
 
-       <div style="display:grid; gap:1.5rem;">
-          <div style="display:flex; flex-direction:column; gap:0.5rem;">
-             <label style="font-weight:600; font-size:0.9rem; color:var(--text-muted);">Full Name</label>
-             <input type="text" id="pName" readonly style="padding:0.75rem; border-radius:0.75rem; border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main); outline:none;">
-          </div>
+       <form id="profileForm">
+         <div style="display:grid; gap:1.5rem;">
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+               <label style="font-weight:600; font-size:0.9rem; color:var(--text-muted);">Display Name</label>
+               <input type="text" id="pName" placeholder="Enter your name" style="padding:0.75rem; border-radius:0.75rem; border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main); outline:none;">
+            </div>
+            <button type="submit" class="btn-primary" id="updateBtn">Update Profile Info</button>
+         </div>
+       </form>
+       
+       <div id="feedbackMsg" style="margin-top:1rem; text-align:center; display:none; font-size:0.9rem; color:var(--success); font-weight:600;">
+          <i class="ph ph-check-circle"></i> Profile updated successfully!
        </div>
     </div>
   </main>
@@ -57,20 +70,23 @@
   <script>
     window.onload = () => {
       const token = localStorage.getItem("token");
-      const name = localStorage.getItem("name") || "Guest User";
+      let name = localStorage.getItem("name") || "Guest User";
       if (!token) window.location.href = "login.html";
 
-      const body = document.getElementById("mainBody");
       const sidebar = document.getElementById("sidebar");
       const toggleSidebar = document.getElementById("toggleSidebar");
       const toggleTheme = document.getElementById("toggleTheme");
 
-      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (document.documentElement.classList.contains("dark-mode")) {
+        toggleTheme.innerHTML = '<i class="ph ph-sun"></i>';
+      }
+
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
 
       toggleTheme.onclick = () => {
-        body.classList.toggle("dark-mode");
-        localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+        const isDark = document.documentElement.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        toggleTheme.innerHTML = isDark ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
       };
 
       toggleSidebar.onclick = () => {
@@ -78,13 +94,41 @@
         localStorage.setItem("sidebar", sidebar.classList.contains("collapsed") ? "collapsed" : "expanded");
       };
 
-      document.getElementById("profileName").innerText = name;
-      document.getElementById("pName").value = name;
-      document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&size=128`;
+      const updateUI = (newName) => {
+        document.getElementById("profileName").innerText = newName;
+        document.getElementById("pName").value = newName;
+        document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(newName)}&background=3b82f6&color=fff&size=128`;
+      };
+
+      updateUI(name);
 
       const authLinks = document.getElementById("authLinks");
       authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
       document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+
+      // Update Logic
+      const form = document.getElementById("profileForm");
+      const feedback = document.getElementById("feedbackMsg");
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const newName = document.getElementById("pName").value;
+        
+        try {
+          const res = await fetch("/update-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({ name: newName })
+          });
+          const data = await res.json();
+          if(data.success) {
+            localStorage.setItem("name", newName);
+            updateUI(newName);
+            feedback.style.display = "block";
+            setTimeout(() => { feedback.style.display = "none"; }, 3000);
+          }
+        } catch (err) { }
+      };
     };
   </script>
 </body>
