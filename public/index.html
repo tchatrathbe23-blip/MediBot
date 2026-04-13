@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,18 +9,42 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    .uploader-zone { border: 2px dashed var(--border-color); border-radius: 1.25rem; padding: 3rem; text-align: center; cursor: pointer; background: var(--bg-main); transition: 0.2s; }
-    .uploader-zone:hover { border-color: var(--primary); }
-    #loadingOverlay { display: none; text-align: center; padding: 2rem; }
-    #analysisResult { display: none; margin-top: 2rem; }
-    #scoreCard { display: none; }
+    .uploader-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: 1.25rem;
+      padding: 3rem;
+      text-align: center;
+      cursor: pointer;
+      background: var(--bg-main);
+      transition: 0.2s;
+    }
+
+    .uploader-zone:hover {
+      border-color: var(--primary);
+    }
+
+    #loadingOverlay {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #analysisResult {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    #scoreCard {
+      display: none;
+    }
   </style>
 </head>
+
 <body>
 
   <aside class="app-sidebar" id="sidebar">
     <div class="brand">
-       <i class="ph ph-heartbeat"></i> <span>MediBot</span>
+      <i class="ph ph-heartbeat"></i> <span>MediBot</span>
     </div>
     <nav class="nav-menu">
       <a href="index.html" class="nav-item active"><i class="ph ph-grid-four"></i> <span>Dashboard</span></a>
@@ -42,26 +67,30 @@
       </div>
       <div style="display:flex; align-items:center; gap:1rem;">
         <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
-        <div class="user-pill card" style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem; margin-bottom:0;">
-           <img id="userAvatar" src="https://ui-avatars.com/api/?background=3b82f6&color=fff" style="width:32px; border-radius:50%;">
-           <span style="font-weight:600; font-size:0.85rem;" id="statusLabel">Secure Session</span>
+        <div class="user-pill card"
+          style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem; margin-bottom:0;">
+          <img id="userAvatar" src="https://ui-avatars.com/api/?background=3b82f6&color=fff"
+            style="width:32px; border-radius:50%;">
+          <span style="font-weight:600; font-size:0.85rem;" id="statusLabel">Secure Session</span>
         </div>
       </div>
     </div>
 
     <!-- Health Score Gauge -->
-    <div id="scoreCard" class="card" style="background: linear-gradient(135deg, var(--primary), #6366f1); color:white; border:none;">
-       <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-             <h2 style="font-size:1.5rem; margin-bottom:0.5rem;">Health Clarity Score</h2>
-             <p style="opacity:0.9; font-size:0.9rem;">Your record analysis depth</p>
-          </div>
-          <div style="font-size:3rem; font-weight:800;" id="scoreValue">85%</div>
-       </div>
-       <div class="score-bar" style="background:rgba(255,255,255,0.2);">
-          <div class="score-fill" id="scoreFill" style="background:white; --fill:85%;"></div>
-       </div>
-       <p style="margin-top:1rem; font-size:0.85rem; opacity:0.8;" id="scoreVerdict">Record is highly legible and ready for clinical review.</p>
+    <div id="scoreCard" class="card"
+      style="background: linear-gradient(135deg, var(--primary), #6366f1); color:white; border:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 style="font-size:1.5rem; margin-bottom:0.5rem;">Health Clarity Score</h2>
+          <p style="opacity:0.9; font-size:0.9rem;">Your record analysis depth</p>
+        </div>
+        <div style="font-size:3rem; font-weight:800;" id="scoreValue">85%</div>
+      </div>
+      <div class="score-bar" style="background:rgba(255,255,255,0.2);">
+        <div class="score-fill" id="scoreFill" style="background:white; --fill:85%;"></div>
+      </div>
+      <p style="margin-top:1rem; font-size:0.85rem; opacity:0.8;" id="scoreVerdict">Record is highly legible and ready
+        for clinical review.</p>
     </div>
 
     <div class="card">
@@ -72,7 +101,7 @@
         <p style="color: var(--text-muted); font-size:0.9rem;">Supports PDF, Images, and DOCX</p>
         <input type="file" id="fileInput" hidden>
       </div>
-      
+
       <div id="loadingOverlay">
         <i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
         <p style="font-weight:600;">Generating Insights...</p>
@@ -134,7 +163,7 @@
       dropZone.onclick = () => fileInput.click();
       fileInput.onchange = (e) => {
         currentFile = e.target.files[0];
-        if(currentFile) {
+        if (currentFile) {
           document.querySelector('.uploader-zone h3').innerText = currentFile.name;
           analyzeBtn.disabled = false;
         }
@@ -155,19 +184,27 @@
             headers: { "Authorization": token },
             body: fd
           });
+
+          // Add this check:
+          if (res.status === 401 || res.status === 403) {
+            localStorage.clear();
+            alert("Session expired. Please login again.");
+            window.location.href = "login.html";
+            return;
+          }
           const data = await res.json();
           loading.style.display = "none";
 
           if (data.success) {
             resultArea.style.display = "block";
             resultArea.innerHTML = `<h2>Clinical Insights</h2><div>${data.insight.replace(/\n/g, '<br>')}</div>`;
-            
+
             // Random-ish score for demo (in production AI will return this)
             const score = Math.floor(Math.random() * 30) + 70;
             scoreCard.style.display = "block";
             document.getElementById("scoreValue").innerText = score + "%";
             document.getElementById("scoreFill").style.setProperty("--fill", score + "%");
-            
+
             analyzeBtn.disabled = false;
             setTimeout(() => document.getElementById('mediBubble').click(), 500);
           } else {
@@ -183,4 +220,5 @@
     };
   </script>
 </body>
+
 </html>
