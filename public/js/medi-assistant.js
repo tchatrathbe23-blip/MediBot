@@ -252,7 +252,17 @@
   const sendBtn = document.getElementById("mediSend");
   const input = document.getElementById("mediInput");
   const msgs = document.getElementById("mediMsgs");
-  const typing = document.getElementById("typingIndicator");
+  // Always re-query typing indicator live to avoid stale reference after innerHTML resets
+  function getTyping() { return msgs.querySelector("#typingIndicator"); }
+  // Safe insert: places node before the typing indicator, or appends if indicator was removed
+  function insertMsg(node) {
+    const t = getTyping();
+    if (t && t.parentNode === msgs) {
+      msgs.insertBefore(node, t);
+    } else {
+      msgs.appendChild(node);
+    }
+  }
 
   // --- 3D Mini Orb in Bubble Canvas ---
   let isThinking = false;
@@ -343,9 +353,11 @@
     const userDiv = document.createElement("div");
     userDiv.className = "msg msg-user";
     userDiv.innerText = text;
-    msgs.insertBefore(userDiv, typing);
+    insertMsg(userDiv);
     input.value = "";
-    typing.style.display = "flex";
+
+    const typingEl = getTyping();
+    if (typingEl) typingEl.style.display = "flex";
     isThinking = true;
     msgs.scrollTop = msgs.scrollHeight;
 
@@ -357,21 +369,23 @@
         body: JSON.stringify({ message: text })
       });
       const data = await res.json();
-      typing.style.display = "none";
+      const typingEl2 = getTyping();
+      if (typingEl2) typingEl2.style.display = "none";
       isThinking = false;
       
       const botDiv = document.createElement("div");
       botDiv.className = "msg msg-bot";
       botDiv.innerHTML = data.reply ? parseContent(data.reply) : "I'm currently synthesizing your clinical records. Please hold on.";
-      msgs.insertBefore(botDiv, typing);
+      insertMsg(botDiv);
       msgs.scrollTop = msgs.scrollHeight;
     } catch (err) {
-      typing.style.display = "none";
+      const typingEl3 = getTyping();
+      if (typingEl3) typingEl3.style.display = "none";
       isThinking = false;
       const botDiv = document.createElement("div");
       botDiv.className = "msg msg-bot";
       botDiv.innerText = "Network connection lost. Please verify your internet and try again.";
-      msgs.insertBefore(botDiv, typing);
+      insertMsg(botDiv);
     }
   }
 
