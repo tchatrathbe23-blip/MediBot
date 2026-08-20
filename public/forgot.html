@@ -1,111 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Forgot Password</title>
-<style>
-  body {
-    background: #0a0a0a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: white;
-    font-family: "Inter";
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Passphrase - MediBot</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #080c14;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
 
-  .box {
-    width: 360px;
-    padding: 25px;
-    background: #111;
-    border-radius: 14px;
-    text-align: center;
-    box-shadow: 0 0 20px rgba(0,255,247,0.2);
-  }
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-  input {
-    width: 100%;
-    padding: 12px;
-    margin: 12px 0;
-    border: 2px solid #00aabb;
-    background: #1a1a1a;
-    border-radius: 10px;
-    color: #00fff7;
-    outline: none;
-  }
-
-  button {
-    width: 100%;
-    padding: 12px;
-    background: #00fff7;
-    color: #111;
-    border: none;
-    border-radius: 10px;
-    margin-top: 10px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-</style>
+    .auth-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 35px rgba(6, 182, 212, 0.2);
+    }
+  </style>
 </head>
-
 <body>
-  <div class="box">
-    <h2>Reset Password</h2>
+
+  <!-- Three.js Ambient 3D Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="card auth-card animate-fade-in">
+    <div class="brand" style="justify-content:center; padding:0; margin-bottom:1.25rem;">
+      <i class="ph ph-heartbeat"></i> <span>MediBot</span>
+    </div>
+    <span class="hologram-tag" style="margin-bottom:1rem; font-size:0.75rem;">Identity Verification</span>
+    <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:0.4rem; color:#ffffff;">Reset Passphrase</h2>
+    <p style="color:var(--text-muted); margin-bottom:2rem; font-size:0.9rem;">Verify your patient ID to reset your access passphrase.</p>
 
     <!-- STEP 1: ENTER NAME -->
-    <input type="text" id="name" placeholder="Enter your name">
-
-    <button onclick="sendOTP()">Send OTP</button>
+    <div id="step1">
+      <div class="form-group">
+        <label>Patient Display Name</label>
+        <input type="text" id="name" placeholder="Enter your registered name" required>
+      </div>
+      <button class="btn-primary" onclick="sendOTP()" style="width:100%;">
+        <i class="ph ph-shield-check"></i> Generate Security OTP
+      </button>
+    </div>
 
     <!-- STEP 2: OTP + NEW PASSWORD -->
     <div id="resetSection" style="display:none;">
-      <input type="text" id="otp" placeholder="Enter OTP">
-      <input type="password" id="newPassword" placeholder="New password">
-
-      <button onclick="resetPassword()">Reset Password</button>
+      <div class="form-group">
+        <label>6-Digit Verification Code</label>
+        <input type="text" id="otp" placeholder="Enter OTP code" required>
+      </div>
+      <div class="form-group">
+        <label>New Passphrase</label>
+        <input type="password" id="newPassword" placeholder="••••••••" required>
+      </div>
+      <button class="btn-primary" onclick="resetPassword()" style="width:100%;">
+        <i class="ph ph-key"></i> Update Passphrase
+      </button>
     </div>
+
+    <p style="margin-top:2rem; font-size:0.9rem; color:var(--text-muted);">
+      Remember your passphrase? <a href="login.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Sign In</a>
+    </p>
   </div>
 
-<script>
-const API_BASE = "";
+  <script>
+    // 3D Background
+    (function() {
+      const canvas = document.getElementById("bg-canvas");
+      if (!canvas || !window.THREE) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 25;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
 
-async function sendOTP() {
-  const name = document.getElementById("name").value;
+      const pGeo = new THREE.BufferGeometry();
+      const count = 250;
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 50;
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0x06b6d4, size: 0.3, transparent: true, opacity: 0.5 });
+      const pMesh = new THREE.Points(pGeo, pMat);
+      scene.add(pMesh);
 
-  const res = await fetch(`${API_BASE}/forgot-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name })
-  });
+      function anim() {
+        requestAnimationFrame(anim);
+        pMesh.rotation.y += 0.001;
+        renderer.render(scene, camera);
+      }
+      anim();
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
 
-  const data = await res.json();
+    async function sendOTP() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) {
+        alert("Please enter your name.");
+        return;
+      }
 
-  if (data.success) {
-    alert("OTP Generated: " + data.otp + "\n(Shown for testing)");
-    document.getElementById("resetSection").style.display = "block";
-  } else {
-    alert(data.message);
-  }
-}
+      try {
+        const res = await fetch("/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
 
-async function resetPassword() {
-  const name = document.getElementById("name").value;
-  const otp = document.getElementById("otp").value;
-  const newPassword = document.getElementById("newPassword").value;
+        const data = await res.json();
+        if (data.success) {
+          alert("Security OTP Generated: " + data.otp);
+          document.getElementById("step1").style.display = "none";
+          document.getElementById("resetSection").style.display = "block";
+        } else {
+          alert(data.message || "User not found.");
+        }
+      } catch (err) {
+        alert("Server error connecting to verification gateway.");
+      }
+    }
 
-  const res = await fetch(`${API_BASE}/reset-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, otp, newPassword })
-  });
+    async function resetPassword() {
+      const name = document.getElementById("name").value.trim();
+      const otp = document.getElementById("otp").value.trim();
+      const newPassword = document.getElementById("newPassword").value;
 
-  const data = await res.json();
-  alert(data.message);
+      if (!otp || !newPassword) {
+        alert("Please provide the OTP code and new password.");
+        return;
+      }
 
-  if (data.success) {
-    window.location.href = "login.html";
-  }
-}
-</script>
+      try {
+        const res = await fetch("/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, otp, newPassword })
+        });
 
+        const data = await res.json();
+        if (data.success) {
+          alert("Password reset successfully! Please sign in.");
+          window.location.href = "login.html";
+        } else {
+          alert(data.message || "Invalid or expired OTP.");
+        }
+      } catch (e) {
+        alert("Server error.");
+      }
+    }
+  </script>
 </body>
 </html>
+

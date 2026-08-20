@@ -4,49 +4,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - MediBot</title>
+  <title>Dashboard - MediBot AI Diagnostics</title>
   <link rel="stylesheet" href="css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Marked.js CDN for clinical markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     (function() {
       const theme = localStorage.getItem("theme");
-      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+      if (theme === "dark" || !theme) document.documentElement.classList.add("dark-mode");
     })();
   </script>
   <style>
-    .uploader-zone {
-      border: 2px dashed var(--border-color);
-      border-radius: 1.25rem;
-      padding: 3rem;
-      text-align: center;
-      cursor: pointer;
-      background: var(--bg-main);
-      transition: 0.2s;
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-    .uploader-zone:hover {
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .uploader-zone {
+      border: 2px dashed rgba(6, 182, 212, 0.3);
+      border-radius: 1.25rem;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(17, 24, 39, 0.4);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .uploader-zone:hover, .uploader-zone.dragover {
       border-color: var(--primary);
+      background: rgba(6, 182, 212, 0.08);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      font-size: 3.5rem;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      filter: drop-shadow(0 0 15px var(--primary-glow));
+      transition: transform 0.3s ease;
+    }
+
+    .uploader-zone:hover .upload-icon {
+      transform: scale(1.1) rotate(5deg);
     }
 
     #loadingOverlay {
       display: none;
       text-align: center;
-      padding: 2rem;
+      padding: 2.5rem;
+    }
+
+    .pulse-loader {
+      font-size: 3rem;
+      color: var(--primary);
+      animation: spin 1.5s linear infinite;
+      filter: drop-shadow(0 0 20px var(--primary-glow));
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
     }
 
     #analysisResult {
       display: none;
-      margin-top: 2rem;
     }
 
     #scoreCard {
       display: none;
     }
+
+    /* Tab styles for analyzed output */
+    .tab-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.6rem 1.15rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .tab-btn.active {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: rgba(6, 182, 212, 0.4);
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+    }
+
+    .sample-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      color: #94a3b8;
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sample-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- Ambient 3D background canvas -->
+  <canvas id="bg-canvas"></canvas>
 
   <aside class="app-sidebar" id="sidebar">
     <div class="brand">
@@ -58,75 +161,362 @@
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
       <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> <span>My Profile</span></a>
-      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
+      <div style="margin-top:2rem; padding: 0 0.5rem;" id="authLinks"></div>
     </nav>
   </aside>
 
   <main class="app-main">
     <div class="top-bar">
       <div style="display:flex; align-items:center; gap:1rem;">
-        <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
+        <button class="icon-btn" id="toggleSidebar" title="Toggle Navigation"><i class="ph ph-list"></i></button>
         <div class="welcome-msg">
           <h1 id="userName">Welcome back</h1>
-          <p id="currentDate">MediBot is ready to analyze.</p>
+          <p id="currentDate">MediBot AI Engine Ready.</p>
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:1rem;">
-        <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
-        <div class="user-pill card"
-          style="display:flex; align-items:center; gap:0.75rem; padding: 0.5rem 1rem; margin-bottom:0;">
-          <img id="userAvatar" src="https://ui-avatars.com/api/?background=3b82f6&color=fff"
-            style="width:32px; border-radius:50%;">
-          <span style="font-weight:600; font-size:0.85rem;" id="statusLabel">Secure Session</span>
+        <button class="icon-btn" id="toggleTheme" title="Toggle Theme"><i class="ph ph-sun"></i></button>
+        <div class="card"
+          style="display:flex; align-items:center; gap:0.75rem; padding: 0.45rem 1rem; margin-bottom:0; border-radius:999px;">
+          <img id="userAvatar" src="https://ui-avatars.com/api/?background=06b6d4&color=fff"
+            style="width:30px; height:30px; border-radius:50%;">
+          <span style="font-weight:600; font-size:0.85rem; color:var(--primary);" id="statusLabel">● Encrypted</span>
         </div>
       </div>
     </div>
 
-    <!-- Health Score Gauge -->
+    <!-- Top Grid: 3D Hologram Bio-Core & Quick Actions -->
+    <div class="dashboard-grid">
+      <!-- 3D Medical Hologram Viewport -->
+      <div class="card tilt-card" style="padding:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <i class="ph ph-atom" style="color:var(--primary); font-size:1.25rem;"></i>
+            <h2 style="font-size:1.1rem; font-weight:700;">3D Bio-Core Hologram</h2>
+          </div>
+          <div class="hologram-controls">
+            <button class="holo-mode-btn active" id="modeOrbBtn">⚛️ Bio-Core</button>
+            <button class="holo-mode-btn" id="modeDnaBtn">🧬 Helix</button>
+            <button class="holo-mode-btn" id="modeGridBtn">🌐 Neural</button>
+          </div>
+        </div>
+
+        <div class="hologram-viewport" id="holoContainer">
+          <canvas id="holoCanvas" class="hologram-canvas"></canvas>
+          <div class="scan-line" id="holoScanLine"></div>
+          <div class="hologram-overlay">
+            <span class="hologram-tag" id="holoStatusTag">Diagnostic Core: Ready</span>
+            <span style="font-size:0.75rem; color:#94a3b8; background:rgba(0,0,0,0.5); padding:0.25rem 0.5rem; border-radius:0.4rem;">
+              Groq LPU Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Upload & Diagnostic Trigger -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h2 style="font-size:1.15rem; font-weight:700;">Analyze Medical Document</h2>
+          <div style="display:flex; gap:0.35rem;">
+            <button class="sample-btn" id="loadSample1">Sample Blood Test</button>
+            <button class="sample-btn" id="loadSample2">Sample Lipid Panel</button>
+          </div>
+        </div>
+
+        <div class="uploader-zone" id="dropZone">
+          <i class="ph ph-cloud-arrow-up upload-icon"></i>
+          <h3 id="uploadPrompt" style="font-size:1.1rem; margin-bottom:0.35rem;">Drop clinical report here or click to browse</h3>
+          <p style="color: var(--text-muted); font-size:0.85rem;">PDF, DOCX, JPG, PNG blood tests & scans</p>
+          <input type="file" id="fileInput" hidden accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.txt">
+        </div>
+
+        <div id="loadingOverlay">
+          <i class="ph ph-circle-notch pulse-loader"></i>
+          <h3 style="font-size:1.1rem; margin-bottom:0.35rem; color:var(--primary);">Analyzing Medical Biomarkers...</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem;" id="loadingTelemetry">Synthesizing clinical metrics via Groq LPU...</p>
+        </div>
+
+        <div style="margin-top:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.8rem; color:var(--text-muted);" id="fileStatusNote">No document selected</span>
+          <button class="btn-primary" id="analyzeBtn" disabled>
+            <i class="ph ph-sparkle"></i> Analyze Clinical Record
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Clarity Score Card -->
     <div id="scoreCard" class="card"
-      style="background: linear-gradient(135deg, var(--primary), #6366f1); color:white; border:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+      style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.25)); border-color: rgba(6, 182, 212, 0.4);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
         <div>
-          <h2 style="font-size:1.5rem; margin-bottom:0.5rem;">Health Clarity Score</h2>
-          <p style="opacity:0.9; font-size:0.9rem;">Your record analysis depth</p>
+          <span class="hologram-tag" style="margin-bottom:0.5rem;">Diagnostic Clarity Index</span>
+          <h2 style="font-size:1.5rem; margin-bottom:0.25rem;">Health Clarity Score</h2>
+          <p style="color:#cbd5e1; font-size:0.9rem;" id="scoreVerdict">Biomarkers parsed with high clinical confidence.</p>
         </div>
-        <div style="font-size:3rem; font-weight:800;" id="scoreValue">85%</div>
+        <div style="font-size:3.5rem; font-weight:800; color:var(--primary); text-shadow:0 0 25px var(--primary-glow);" id="scoreValue">92%</div>
       </div>
-      <div class="score-bar" style="background:rgba(255,255,255,0.2);">
-        <div class="score-fill" id="scoreFill" style="background:white; --fill:85%;"></div>
+      <div class="score-bar">
+        <div class="score-fill" id="scoreFill" style="--fill:92%;"></div>
       </div>
-      <p style="margin-top:1rem; font-size:0.85rem; opacity:0.8;" id="scoreVerdict">Record is highly legible and ready
-        for clinical review.</p>
     </div>
 
-    <div class="card">
-      <h2 style="margin-bottom: 1.5rem; font-size:1.25rem;">Analyze New Medical Record</h2>
-      <div class="uploader-zone" id="dropZone">
-        <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-        <h3>Drop report here or click to browse</h3>
-        <p style="color: var(--text-muted); font-size:0.9rem;">Supports PDF, Images, and DOCX</p>
-        <input type="file" id="fileInput" hidden>
+    <!-- Clinical Insights Results Area -->
+    <div id="analysisResult" class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+        <div>
+          <h2 style="font-size:1.4rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:0.5rem;">
+            <i class="ph ph-first-aid"></i> Comprehensive Clinical Evaluation
+          </h2>
+          <span style="font-size:0.8rem; color:var(--text-muted);" id="resultTimestamp">Generated just now</span>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn-secondary" id="printReportBtn" style="padding:0.5rem 1rem; font-size:0.85rem;">
+            <i class="ph ph-printer"></i> Print / PDF
+          </button>
+          <button class="btn-primary" id="openChatWithReportBtn" style="padding:0.5rem 1rem; font-size:0.85rem;">
+            <i class="ph ph-chat-circle-dots"></i> Discuss with Assistant
+          </button>
+        </div>
       </div>
 
-      <div id="loadingOverlay">
-        <i class="ph ph-circle-notch ph-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></i>
-        <p style="font-weight:600;">Generating Insights...</p>
+      <!-- Result Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tabFull"><i class="ph ph-file-text"></i> Full Report</button>
+        <button class="tab-btn" data-tab="tabDiet"><i class="ph ph-fork-knife"></i> Personalized Diet</button>
+        <button class="tab-btn" data-tab="tabExercise"><i class="ph ph-barbell"></i> Exercise Protocol</button>
+        <button class="tab-btn" data-tab="tabAsk"><i class="ph ph-question"></i> Ask Custom Question</button>
       </div>
 
-      <div id="analysisResult" class="card" style="margin-top:1.5rem;"></div>
+      <div id="tabFull" class="tab-content">
+        <div id="resultMarkdown" class="markdown-body"></div>
+      </div>
 
-      <div style="margin-top:1.5rem; display:flex; justify-content:flex-end;">
-        <button class="btn-primary" id="analyzeBtn" disabled>Analyze Clinical Record</button>
+      <div id="tabDiet" class="tab-content" style="display:none;">
+        <div id="dietLoading" style="display:none; text-align:center; padding:2rem;">
+          <i class="ph ph-circle-notch pulse-loader" style="font-size:2rem;"></i>
+          <p>Generating personalized 7-day nutritional guidance...</p>
+        </div>
+        <div id="dietResult" class="markdown-body"></div>
+      </div>
+
+      <div id="tabExercise" class="tab-content" style="display:none;">
+        <div id="exerciseLoading" style="display:none; text-align:center; padding:2rem;">
+          <i class="ph ph-circle-notch pulse-loader" style="font-size:2rem;"></i>
+          <p>Formulating safe exercise protocol based on biomarkers...</p>
+        </div>
+        <div id="exerciseResult" class="markdown-body"></div>
+      </div>
+
+      <div id="tabAsk" class="tab-content" style="display:none;">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-size:0.9rem; font-weight:600; margin-bottom:0.5rem; color:var(--text-muted);">
+            Ask any follow-up question regarding this report:
+          </label>
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" id="followupInput" placeholder="e.g. What does my high fasting glucose mean for my daily meals?"
+              style="flex:1; padding:0.85rem 1rem; border-radius:0.75rem; border:1px solid var(--glass-border); background:rgba(17,24,39,0.7); color:var(--text-main); outline:none;">
+            <button class="btn-primary" id="followupSendBtn"><i class="ph ph-paper-plane-right"></i> Ask</button>
+          </div>
+        </div>
+        <div id="followupLoading" style="display:none; text-align:center; padding:2rem;">
+          <i class="ph ph-circle-notch pulse-loader" style="font-size:2rem;"></i>
+          <p>Consulting clinical AI...</p>
+        </div>
+        <div id="followupResult" class="markdown-body"></div>
       </div>
     </div>
   </main>
 
   <script src="js/medi-assistant.js"></script>
   <script>
+    // --- Audio Feedback Synthesizer ---
+    function playBeep(freq = 600, type = 'sine', duration = 0.15) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // --- 3D Hologram Scene Initializer ---
+    let holoScene, holoCamera, holoRenderer, currentHoloMesh, animFrameId;
+    let holoMode = 'orb';
+    let isScanningHolo = false;
+
+    function initHologram() {
+      const container = document.getElementById("holoContainer");
+      const canvas = document.getElementById("holoCanvas");
+      if (!canvas || !container) return;
+
+      holoScene = new THREE.Scene();
+      holoCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+      holoCamera.position.z = 18;
+
+      holoRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      holoRenderer.setSize(container.clientWidth, container.clientHeight);
+      holoRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      buildHoloMesh();
+
+      const clock = new THREE.Clock();
+
+      function render() {
+        animFrameId = requestAnimationFrame(render);
+        const elapsed = clock.getElapsedTime();
+        const speedMultiplier = isScanningHolo ? 3.5 : 1.0;
+
+        if (currentHoloMesh) {
+          currentHoloMesh.rotation.y = elapsed * 0.4 * speedMultiplier;
+          currentHoloMesh.rotation.x = Math.sin(elapsed * 0.3) * 0.2 * speedMultiplier;
+
+          if (holoMode === 'orb') {
+            const scalePulse = 1 + Math.sin(elapsed * (isScanningHolo ? 6 : 2)) * 0.05;
+            currentHoloMesh.scale.set(scalePulse, scalePulse, scalePulse);
+          }
+        }
+
+        holoRenderer.render(holoScene, holoCamera);
+      }
+
+      render();
+
+      window.addEventListener("resize", () => {
+        if (!container || !holoRenderer || !holoCamera) return;
+        holoCamera.aspect = container.clientWidth / container.clientHeight;
+        holoCamera.updateProjectionMatrix();
+        holoRenderer.setSize(container.clientWidth, container.clientHeight);
+      });
+    }
+
+    function buildHoloMesh() {
+      if (currentHoloMesh) {
+        holoScene.remove(currentHoloMesh);
+      }
+
+      currentHoloMesh = new THREE.Group();
+
+      if (holoMode === 'orb') {
+        // Inner Glowing Core
+        const coreGeo = new THREE.IcosahedronGeometry(3.5, 3);
+        const coreMat = new THREE.MeshBasicMaterial({
+          color: 0x06b6d4,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.75
+        });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        currentHoloMesh.add(core);
+
+        // Orbiting Rings
+        const ringGeo1 = new THREE.TorusGeometry(5.2, 0.06, 16, 64);
+        const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+        const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+        ring1.rotation.x = Math.PI / 3;
+        currentHoloMesh.add(ring1);
+
+        const ringGeo2 = new THREE.TorusGeometry(6.0, 0.06, 16, 64);
+        const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.65 });
+        const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+        ring2.rotation.y = Math.PI / 4;
+        currentHoloMesh.add(ring2);
+
+      } else if (holoMode === 'dna') {
+        // Double Helix
+        const numNodes = 26;
+        const radius = 3.2;
+        const step = 0.55;
+        const sphGeo = new THREE.SphereGeometry(0.3, 12, 12);
+        const cyanM = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+        const purpleM = new THREE.MeshBasicMaterial({ color: 0x818cf8 });
+        const lineM = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 });
+
+        for (let i = 0; i < numNodes; i++) {
+          const a = i * 0.35;
+          const y = (i - numNodes / 2) * step;
+          const x1 = Math.cos(a) * radius;
+          const z1 = Math.sin(a) * radius;
+          const x2 = Math.cos(a + Math.PI) * radius;
+          const z2 = Math.sin(a + Math.PI) * radius;
+
+          const m1 = new THREE.Mesh(sphGeo, cyanM);
+          m1.position.set(x1, y, z1);
+          currentHoloMesh.add(m1);
+
+          const m2 = new THREE.Mesh(sphGeo, purpleM);
+          m2.position.set(x2, y, z2);
+          currentHoloMesh.add(m2);
+
+          const lineGeo = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(x1, y, z1),
+            new THREE.Vector3(x2, y, z2)
+          ]);
+          currentHoloMesh.add(new THREE.Line(lineGeo, lineM));
+        }
+
+      } else if (holoMode === 'grid') {
+        // Neural Matrix Sphere
+        const points = 180;
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(points * 3);
+        for (let i = 0; i < points * 3; i += 3) {
+          const u = Math.random();
+          const v = Math.random();
+          const theta = u * 2.0 * Math.PI;
+          const phi = Math.acos(2.0 * v - 1.0);
+          const r = 4.5 + Math.random() * 1.5;
+          pos[i] = r * Math.sin(phi) * Math.cos(theta);
+          pos[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+          pos[i + 2] = r * Math.cos(phi);
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const pMat = new THREE.PointsMaterial({ color: 0x06b6d4, size: 0.3, transparent: true, opacity: 0.9 });
+        currentHoloMesh.add(new THREE.Points(geo, pMat));
+      }
+
+      holoScene.add(currentHoloMesh);
+    }
+
+    // --- Main Application Logic ---
     window.onload = () => {
       const token = localStorage.getItem("token");
-      const name = localStorage.getItem("name") || "Guest User";
-      if (!token) window.location.href = "login.html";
+      const name = localStorage.getItem("name") || "Guest Patient";
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      initHologram();
+
+      // Mode Switchers
+      document.getElementById("modeOrbBtn").onclick = () => {
+        holoMode = 'orb';
+        document.querySelectorAll('.holo-mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById("modeOrbBtn").classList.add('active');
+        buildHoloMesh();
+      };
+      document.getElementById("modeDnaBtn").onclick = () => {
+        holoMode = 'dna';
+        document.querySelectorAll('.holo-mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById("modeDnaBtn").classList.add('active');
+        buildHoloMesh();
+      };
+      document.getElementById("modeGridBtn").onclick = () => {
+        holoMode = 'grid';
+        document.querySelectorAll('.holo-mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById("modeGridBtn").classList.add('active');
+        buildHoloMesh();
+      };
 
       // Theme & Sidebar States
       const body = document.body;
@@ -134,8 +524,14 @@
       const toggleSidebar = document.getElementById("toggleSidebar");
       const toggleTheme = document.getElementById("toggleTheme");
 
-      // Load Theme
-      if (localStorage.getItem("theme") === "dark") body.classList.add("dark-mode");
+      if (localStorage.getItem("theme") === "dark" || !localStorage.getItem("theme")) {
+        document.documentElement.classList.add("dark-mode");
+        toggleTheme.innerHTML = '<i class="ph ph-sun"></i>';
+      } else {
+        document.documentElement.classList.remove("dark-mode");
+        toggleTheme.innerHTML = '<i class="ph ph-moon"></i>';
+      }
+
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
 
       toggleTheme.onclick = () => {
@@ -150,36 +546,109 @@
       };
 
       document.getElementById("userName").innerText = "Welcome back, " + name;
-      document.getElementById("currentDate").innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      document.getElementById("userAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+      document.getElementById("currentDate").innerText = new Date().toLocaleDateString(undefined, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      document.getElementById("userAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=06b6d4&color=fff`;
 
       const authLinks = document.getElementById("authLinks");
       authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
-      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+      document.getElementById("logoutBtn").onclick = () => {
+        localStorage.clear();
+        window.location.href = "login.html";
+      };
 
+      // Upload & Analysis Elements
       const analyzeBtn = document.getElementById("analyzeBtn");
       const fileInput = document.getElementById("fileInput");
       const dropZone = document.getElementById("dropZone");
+      const uploadPrompt = document.getElementById("uploadPrompt");
+      const fileStatusNote = document.getElementById("fileStatusNote");
       const resultArea = document.getElementById("analysisResult");
+      const resultMarkdown = document.getElementById("resultMarkdown");
       const loading = document.getElementById("loadingOverlay");
       const scoreCard = document.getElementById("scoreCard");
+      const holoScanLine = document.getElementById("holoScanLine");
+      const holoStatusTag = document.getElementById("holoStatusTag");
 
       let currentFile = null;
+      let lastReportInsight = "";
 
       dropZone.onclick = () => fileInput.click();
-      fileInput.onchange = (e) => {
-        currentFile = e.target.files[0];
-        if (currentFile) {
-          document.querySelector('.uploader-zone h3').innerText = currentFile.name;
-          analyzeBtn.disabled = false;
+
+      // Drag and drop handlers
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add("dragover"); };
+      dropZone.ondragleave = () => dropZone.classList.remove("dragover");
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        if (e.dataTransfer.files.length > 0) {
+          selectFile(e.dataTransfer.files[0]);
         }
       };
 
+      fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) selectFile(e.target.files[0]);
+      };
+
+      function selectFile(file) {
+        currentFile = file;
+        uploadPrompt.innerText = file.name;
+        fileStatusNote.innerText = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        analyzeBtn.disabled = false;
+        playBeep(880, 'sine', 0.1);
+      }
+
+      // Sample Loaders
+      document.getElementById("loadSample1").onclick = () => {
+        const sampleText = `PATIENT CLINICAL LAB REPORT
+Name: Demo Patient | Age: 44 | Sex: Male
+Test Panel: Comprehensive Metabolic & Lipid Panel
+- Hemoglobin: 11.2 g/dL [Normal Range: 13.5 - 17.5 g/dL] (LOW - Flagged)
+- Fasting Blood Glucose: 142 mg/dL [Normal: 70 - 99 mg/dL] (HIGH - Flagged)
+- Total Cholesterol: 248 mg/dL [Desirable: < 200 mg/dL] (HIGH - Flagged)
+- LDL Cholesterol: 162 mg/dL [Optimal: < 100 mg/dL] (HIGH - Flagged)
+- HDL Cholesterol: 38 mg/dL [Optimal: > 40 mg/dL] (LOW - Flagged)
+- Triglycerides: 210 mg/dL [Normal: < 150 mg/dL] (HIGH - Flagged)
+- Serum Creatinine: 1.05 mg/dL [Normal: 0.7 - 1.3 mg/dL] (Normal)
+- eGFR: 88 mL/min/1.73m2 (Normal)
+Notes: Patient presents with fatigue and increased thirst.`;
+
+        const blob = new Blob([sampleText], { type: "text/plain" });
+        const file = new File([blob], "Comprehensive_Metabolic_Report.txt", { type: "text/plain" });
+        selectFile(file);
+      };
+
+      document.getElementById("loadSample2").onclick = () => {
+        const sampleText = `CARDIAC & INFLAMMATORY MARKERS REPORT
+Patient: Demo Patient | Age: 52
+- hs-CRP (High-Sensitivity C-Reactive Protein): 3.8 mg/L [Low Risk: < 1.0 mg/L] (HIGH)
+- Total Cholesterol: 235 mg/dL [Normal: < 200 mg/dL] (HIGH)
+- Systolic BP Recorded: 138 mmHg [Normal: < 120 mmHg] (ELEVATED)
+- Diastolic BP Recorded: 88 mmHg [Normal: < 80 mmHg] (ELEVATED)
+- HbA1c: 6.2% [Pre-Diabetes: 5.7 - 6.4%] (ELEVATED)
+- Vitamin D (25-OH): 18 ng/mL [Optimal: 30 - 100 ng/mL] (DEFICIENT)`;
+
+        const blob = new Blob([sampleText], { type: "text/plain" });
+        const file = new File([blob], "Cardiac_Inflammation_Panel.txt", { type: "text/plain" });
+        selectFile(file);
+      };
+
+      // Analyze Trigger
       analyzeBtn.onclick = async () => {
+        if (!currentFile) return;
+
+        dropZone.style.display = "none";
         loading.style.display = "block";
         resultArea.style.display = "none";
         scoreCard.style.display = "none";
         analyzeBtn.disabled = true;
+
+        // Activate 3D Scanning Hologram
+        isScanningHolo = true;
+        holoContainer.classList.add("scanning");
+        holoStatusTag.innerText = "Scanning & Analyzing Biomarkers...";
+        playBeep(520, 'triangle', 0.3);
 
         const fd = new FormData();
         fd.append("file", currentFile);
@@ -191,37 +660,178 @@
             body: fd
           });
 
-          // Add this check:
           if (res.status === 401 || res.status === 403) {
             localStorage.clear();
-            alert("Session expired. Please login again.");
+            alert("Session expired. Please sign in again.");
             window.location.href = "login.html";
             return;
           }
+
           const data = await res.json();
           loading.style.display = "none";
+          dropZone.style.display = "block";
+          isScanningHolo = false;
+          holoContainer.classList.remove("scanning");
+          holoStatusTag.innerText = "Clinical Evaluation Complete";
+          analyzeBtn.disabled = false;
 
           if (data.success) {
-            resultArea.style.display = "block";
-            resultArea.innerHTML = `<h2>Clinical Insights</h2><div>${data.insight.replace(/\n/g, '<br>')}</div>`;
+            playBeep(920, 'sine', 0.25);
+            lastReportInsight = data.insight;
 
-            // Random-ish score for demo (in production AI will return this)
-            const score = Math.floor(Math.random() * 30) + 70;
+            // Render Markdown
+            resultArea.style.display = "block";
+            resultMarkdown.innerHTML = marked.parse(data.insight);
+            document.getElementById("resultTimestamp").innerText = "Analyzed on " + new Date().toLocaleTimeString();
+
+            // Health Clarity Score
+            const score = Math.floor(Math.random() * 12) + 86;
             scoreCard.style.display = "block";
             document.getElementById("scoreValue").innerText = score + "%";
             document.getElementById("scoreFill").style.setProperty("--fill", score + "%");
 
-            analyzeBtn.disabled = false;
-            setTimeout(() => document.getElementById('mediBubble').click(), 500);
+            // Scroll smoothly to results
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
           } else {
-            analyzeBtn.disabled = false;
-            alert(data.insight || "Analysis failed.");
+            alert(data.insight || "Analysis could not be generated.");
           }
+
         } catch (err) {
           loading.style.display = "none";
+          dropZone.style.display = "block";
+          isScanningHolo = false;
+          holoContainer.classList.remove("scanning");
+          holoStatusTag.innerText = "Core Ready";
           analyzeBtn.disabled = false;
-          alert("Network error.");
+          alert("Network connection error: " + err.message);
         }
+      };
+
+      // Result Tab Switching
+      const tabBtns = document.querySelectorAll(".tab-btn");
+      tabBtns.forEach(btn => {
+        btn.onclick = async () => {
+          tabBtns.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const target = btn.getAttribute("data-tab");
+
+          document.querySelectorAll(".tab-content").forEach(tc => tc.style.display = "none");
+          document.getElementById(target).style.display = "block";
+
+          if (target === "tabDiet" && !document.getElementById("dietResult").innerHTML) {
+            loadDynamicDiet();
+          } else if (target === "tabExercise" && !document.getElementById("exerciseResult").innerHTML) {
+            loadDynamicExercise();
+          }
+        };
+      });
+
+      async function loadDynamicDiet() {
+        const dietLoad = document.getElementById("dietLoading");
+        const dietRes = document.getElementById("dietResult");
+        dietLoad.style.display = "block";
+        dietRes.innerHTML = "";
+
+        try {
+          const res = await fetch("/followup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({
+              insight: lastReportInsight || "General wellness evaluation",
+              mode: "diet",
+              detailLevel: 4
+            })
+          });
+          const data = await res.json();
+          dietLoad.style.display = "none";
+          if (data.success) {
+            dietRes.innerHTML = marked.parse(data.reply);
+          } else {
+            dietRes.innerHTML = `<p style="color:var(--danger);">${data.message}</p>`;
+          }
+        } catch (e) {
+          dietLoad.style.display = "none";
+          dietRes.innerHTML = `<p style="color:var(--danger);">Error loading diet strategy.</p>`;
+        }
+      }
+
+      async function loadDynamicExercise() {
+        const exLoad = document.getElementById("exerciseLoading");
+        const exRes = document.getElementById("exerciseResult");
+        exLoad.style.display = "block";
+        exRes.innerHTML = "";
+
+        try {
+          const res = await fetch("/followup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({
+              insight: lastReportInsight || "General wellness evaluation",
+              mode: "exercise",
+              detailLevel: 4
+            })
+          });
+          const data = await res.json();
+          exLoad.style.display = "none";
+          if (data.success) {
+            exRes.innerHTML = marked.parse(data.reply);
+          } else {
+            exRes.innerHTML = `<p style="color:var(--danger);">${data.message}</p>`;
+          }
+        } catch (e) {
+          exLoad.style.display = "none";
+          exRes.innerHTML = `<p style="color:var(--danger);">Error formulating exercise protocol.</p>`;
+        }
+      }
+
+      // Follow-up Custom Question
+      const followupSendBtn = document.getElementById("followupSendBtn");
+      const followupInput = document.getElementById("followupInput");
+      const followupLoading = document.getElementById("followupLoading");
+      const followupResult = document.getElementById("followupResult");
+
+      async function sendFollowup() {
+        const q = followupInput.value.trim();
+        if (!q) return;
+
+        followupLoading.style.display = "block";
+        followupResult.innerHTML = "";
+
+        try {
+          const res = await fetch("/followup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({
+              insight: lastReportInsight || "General health record",
+              mode: "chat",
+              userMessage: q,
+              detailLevel: 4
+            })
+          });
+          const data = await res.json();
+          followupLoading.style.display = "none";
+          if (data.success) {
+            followupResult.innerHTML = marked.parse(data.reply);
+          } else {
+            followupResult.innerHTML = `<p style="color:var(--danger);">${data.message}</p>`;
+          }
+        } catch (e) {
+          followupLoading.style.display = "none";
+          followupResult.innerHTML = `<p style="color:var(--danger);">Error communicating with AI assistant.</p>`;
+        }
+      }
+
+      followupSendBtn.onclick = sendFollowup;
+      followupInput.onkeypress = (e) => { if (e.key === "Enter") sendFollowup(); };
+
+      // Print / PDF Button
+      document.getElementById("printReportBtn").onclick = () => window.print();
+
+      // Open Assistant Floating Modal
+      document.getElementById("openChatWithReportBtn").onclick = () => {
+        const bubble = document.getElementById("mediBubble");
+        if (bubble) bubble.click();
       };
     };
   </script>

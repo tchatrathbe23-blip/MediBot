@@ -13,6 +13,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 
+const dns = require("node:dns");
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch (e) {}
+
 // Models
 const User = require("./models/User");
 const Report = require("./models/Reports");
@@ -36,9 +41,72 @@ mongoose
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODELS = [
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "qwen/qwen3.6-27b",
+  "groq/compound-mini"
+];
+
+// Unified High-Performance AI Caller
+async function callAI({ systemPrompt, userPrompt, temperature = 0.3 }) {
+  if (GROQ_API_KEY) {
+    for (const model of GROQ_MODELS) {
+      try {
+        console.log(`🤖 Attempting Groq with model: ${model}...`);
+        const res = await axios.post(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            model,
+            messages: [
+              { role: "system", content: systemPrompt || "You are MediBot, an expert clinical AI assistant." },
+              { role: "user", content: userPrompt }
+            ],
+            temperature,
+            max_tokens: 4096
+          },
+          {
+            headers: {
+              "Authorization": `Bearer ${GROQ_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            timeout: 35000
+          }
+        );
+        const reply = res.data?.choices?.[0]?.message?.content;
+        if (reply && reply.trim().length > 0) {
+          console.log(`✅ Groq success (${model})`);
+          return reply.trim();
+        }
+      } catch (err) {
+        console.warn(`⚠️ Groq model ${model} error:`, err.response?.data?.error?.message || err.message);
+      }
+    }
+  }
+
+  // Fallback to Gemini if Groq fails
+  if (GEMINI_API_KEY) {
+    try {
+      console.log("🤖 Fallback: Attempting Gemini 2.0 Flash...");
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const fullPrompt = `${systemPrompt ? systemPrompt + "\n\n" : ""}${userPrompt}`;
+      const result = await model.generateContent(fullPrompt);
+      const reply = result.response.text();
+      if (reply && reply.trim().length > 0) {
+        console.log("✅ Gemini success");
+        return reply.trim();
+      }
+    } catch (geminiErr) {
+      console.warn("⚠️ Gemini fallback failed:", geminiErr.message);
+    }
+  }
+
+  throw new Error("All AI engines (Groq and Gemini) were unable to process the request.");
+}
 
 // --------------------------------------------------
 // 📂 File Upload Setup
@@ -114,75 +182,53 @@ app.post("/post-here", (req, res) => {
 
 app.post("/followup", verifyToken, async (req, res) => {
   try {
-    const { insight, mode, userMessage, detailLevel } = req.body;
+    const { insight, mode, userMessage, detailLevel = 3 } = req.body;
 
-    if (!insight) {
-      return res.json({ success: false, message: "No base insight provided" });
+    if (!insight && !userMessage) {
+      return res.json({ success: false, message: "No medical context provided" });
     }
 
-    // 🌟 Build dynamic prompt depending on mode
-    let prompt = "";
+    let systemPrompt = "You are MediBot, an empathetic and highly knowledgeable clinical AI specialist.";
+    let userPrompt = "";
 
     if (mode === "diet") {
-      prompt = `
-You are a medical assistant. Based only on the following analyzed medical report:
-
-"${insight}"
-Generate a clear, personalized DIET PLAN (detail level: ${detailLevel}/5).
-Format it cleanly using bullet points with short explanations.
-Do NOT invent medical values.
-`;
-    }
-
-    else if (mode === "exercise") {
-      prompt = `
-You are a medical assistant. Based only on the following analyzed medical report:
-
-"${insight}"
-
-Generate a safe EXERCISE GUIDANCE plan (detail level: ${detailLevel}/5).
-Explain what to do, what to avoid, and provide intensity notes.
-`;
-    }
-
-    else if (mode === "preset") {
-      prompt = `
-Based on the following analyzed medical report:
-
-"${insight}"
-
-Answer the user's question:
+      userPrompt = `Based strictly on the following clinical medical findings:
+"""
+${insight}
+"""
+Generate an individualized, clinical-grade Diet & Nutritional Strategy (Detail Level: ${detailLevel}/5).
+Include:
+- Priority Foods to consume & Key Nutrients
+- Foods and substances to restrict or avoid
+- Sample daily meal framework
+- Hydration and electrolyte considerations
+Format cleanly with Markdown headers and bullet points.`;
+    } else if (mode === "exercise") {
+      userPrompt = `Based strictly on the following clinical medical findings:
+"""
+${insight}
+"""
+Generate an individualized, clinical-grade Exercise & Physical Therapy Protocol (Detail Level: ${detailLevel}/5).
+Include:
+- Recommended cardiovascular & resistance exercises
+- Target heart rate / intensity guidance & weekly volume
+- Specific exercises/movements to avoid given the findings
+- Warm-up & cool-down recovery recommendations
+Format cleanly with Markdown headers and bullet points.`;
+    } else if (mode === "preset" || mode === "chat") {
+      userPrompt = `Based on the following clinical report findings:
+"""
+${insight}
+"""
+Answer the user's specific follow-up question:
 "${userMessage}"
 
-Keep language simple and clean. Detail level: ${detailLevel}/5.
-`;
+Detail level: ${detailLevel}/5. Deliver a structured, accurate, and easy-to-understand explanation formatted in clean Markdown.`;
+    } else {
+      userPrompt = `Medical Report Context:\n"""\n${insight}\n"""\n\nQuestion / Request: ${userMessage || "Provide practical next steps."}`;
     }
 
-    else if (mode === "chat") {
-      prompt = `
-You are the AI assistant analyzing this report:
-
-"${insight}"
-
-Now answer the user's follow-up question:
-"${userMessage}"
-
-Respond clearly, with smooth formatting and no invented data.
-`;
-    }
-
-    else {
-      prompt = `
-Based on the following medical insight:
-"${insight}"
-Answer appropriately.
-`;
-    }
-
-    // 🌟 Call Gemini via Official SDK
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(prompt);
-    const reply = result.response.text() || "No response generated.";
+    const reply = await callAI({ systemPrompt, userPrompt, temperature: 0.35 });
 
     return res.json({
       success: true,
@@ -193,7 +239,7 @@ Answer appropriately.
     console.error("FOLLOWUP ERROR:", err);
     return res.json({
       success: false,
-      message: "Failed to generate follow-up response"
+      message: "Failed to generate follow-up response: " + err.message
     });
   }
 });
@@ -340,49 +386,44 @@ app.post("/analyze", verifyToken, upload.single("file"), async (req, res) => {
     }
 
     const ANALYSIS_PROMPT = `
-You are a medical analysis AI. Analyze this medical report and generate clean, structured insights.
+You are MediBot, an elite clinical AI diagnostic assistant. Analyze the uploaded medical report in detail and provide a comprehensive, structured clinical evaluation.
 
-INPUT REPORT:
+MEDICAL REPORT CONTENT:
+"""
 ${fileContent}
+"""
 
-OUTPUT FORMAT STRICTLY:
+Please format your response strictly using clean, valid Markdown as follows:
 
-1. Key Medical Findings
-2. Possible Conditions (Likely / Possible / Uncertain)
-3. Doctor Visit Recommendation
-4. Diet Recommendations
-5. Exercise Recommendations
-6. Additional Insights
+# 🏥 Clinical Diagnostic Summary
+
+## 1. 📊 Key Medical Biomarkers & Test Findings
+Format the core test values into a markdown table with columns: [Test Parameter, Measured Result, Reference Range, Clinical Status (Normal / High / Low / Critical)].
+
+## 2. 🩺 Diagnostic Assessment & Clinical Impressions
+- **Primary / Indicated Conditions:**
+- **Secondary / Potential Risk Factors:**
+- **Inconclusive / Requiring Corroboration:**
+
+## 3. 👨‍⚕️ Clinical Recommendations & Specialist Referrals
+Detail specific medical specialists, tests to repeat, or monitoring protocols recommended.
+
+## 4. 🥗 Personalized Nutrition & Dietary Action Plan
+Actionable nutritional advice, foods to eat, foods to avoid, and hydration guidelines based directly on these test values.
+
+## 5. 🏃 Exercise & Physical Activity Protocols
+Safe exercise frequency, intensity, activities to prioritize or avoid.
+
+## 6. ⚠️ Critical Warning Signs & Precautions
+Symptoms or red flags requiring immediate physician consultation or urgent care.
 
 Rules:
-- Do NOT invent values.
-- Keep language simple.
+- Base all insights strictly on data in the report. Do not fabricate numerical values.
+- Keep the language compassionate, authoritative, and structured.
 `;
 
-    const MODELS_TO_TRY = ["gemini-2.0-flash"];
-    let insight = "";
-    let lastError;
-
-    for (const modelName of MODELS_TO_TRY) {
-      try {
-        console.log(`Trying model: ${modelName} via SDK...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent(ANALYSIS_PROMPT);
-        insight = result.response.text();
-        if (insight) {
-          console.log(`✅ Success with ${modelName}`);
-          break;
-        }
-      } catch (err) {
-        lastError = err;
-        console.warn(`❌ ${modelName} failed:`, err.message);
-        // Continue to next model
-      }
-    }
-
-    if (!insight) {
-      throw lastError || new Error("All AI models failed.");
-    }
+    const systemPrompt = "You are MediBot, an expert clinical analysis AI designed to assist patients in understanding their medical test reports.";
+    const insight = await callAI({ systemPrompt, userPrompt: ANALYSIS_PROMPT, temperature: 0.25 });
 
     await Report.create({
       userId: req.userId,
@@ -393,23 +434,10 @@ Rules:
     return res.json({ success: true, insight });
 
   } catch (err) {
-    // Get the actual status code
-    const status = err.status || err.response?.status || 500;
-    const errorMsg = err.message || "Unknown error";
-
-    console.error(`❌ Analyze Error (${status}):`, errorMsg);
-
-    // Handle quota exceeded specifically
-    if (status === 429) {
-      return res.status(200).json({
-        success: false,
-        insight: "⚠️ AI quota exceeded. Please wait a minute and try again, or upgrade your Gemini plan."
-      });
-    }
-
+    console.error("❌ Analyze Error:", err.message);
     return res.status(200).json({
       success: false,
-      insight: `Analysis Error: ${errorMsg}`
+      insight: `Analysis Error: ${err.message || "Failed to analyze document"}`
     });
   }
 });
@@ -517,38 +545,45 @@ app.post("/submit-feedback", verifyToken, async (req, res) => {
 
 // --------------------------------------------------
 // 🤖 GENERAL AI CHAT (Medi-Assistant)
+// --------------------------------------------------
 app.post("/chat", verifyToken, async (req, res) => {
   try {
     const { message } = req.body;
+    if (!message || !message.trim()) {
+      return res.json({ success: false, message: "Please provide a question." });
+    }
 
     // 🌟 Fetch latest report for context
     const latestReport = await Report.findOne({ userId: req.userId }).sort({ createdAt: -1 });
-    const context = latestReport ? `CONTEXT REPORT:\n${latestReport.content}\n` : "No medical report uploaded yet.";
+    const user = await User.findById(req.userId);
+    const userName = user ? user.name : "Patient";
 
-    const CHAT_PROMPT = `
-You are MediBot Assistant, a helpful medical companion. 
-Use the following context to answer the user's question, but keep it professional.
+    const context = latestReport
+      ? `PATIENT'S RECENT MEDICAL RECORD:\n"""\n${latestReport.content}\n"""`
+      : "No previous medical reports on record.";
 
+    const systemPrompt = `You are MediBot Assistant, an intelligent, empathetic, and professional medical companion chatting with ${userName}.
+You have direct access to their medical report history context below:
 ${context}
 
-USER QUESTION: ${message}
+Instructions:
+1. Greet warmly and address the patient by name when appropriate.
+2. If asked about their report, refer precisely to the biomarkers, conclusions, or recommendations in the context.
+3. If they ask about symptoms, diet, or lifestyle, provide clear, safe, evidence-based recommendations formatted with bold highlights and bullet points.
+4. Always clarify that you provide clinical AI guidance, and advise consulting their physician for formal prescriptions.
+5. Keep responses crisp, neat, and formatted with clean Markdown.`;
 
-Rules:
-1. If the user says "hi", just be friendly.
-2. If they ask about the report, use the context.
-3. Keep it concise.
-`;
-
-    // 🌟 Call Gemini via Official SDK
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const result = await model.generateContent(CHAT_PROMPT);
-    const reply = result.response.text() || "I'm processing your data, one moment...";
+    const reply = await callAI({
+      systemPrompt,
+      userPrompt: message,
+      temperature: 0.5
+    });
 
     res.json({ success: true, reply });
 
   } catch (err) {
     console.error("CHAT ERROR:", err.message);
-    res.json({ success: false, message: "Assistant offline - Try again in 30s" });
+    res.json({ success: false, message: "MediBot Assistant is momentarily recalibrating. Please try again." });
   }
 });
 

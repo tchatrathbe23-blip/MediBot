@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Clinical History - MediBot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinical History - MediBot Vault</title>
   <link rel="stylesheet" href="css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Marked.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     (function() {
       const theme = localStorage.getItem("theme");
-      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+      if (theme === "dark" || !theme) document.documentElement.classList.add("dark-mode");
     })();
   </script>
-  <style>
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
-    .modal-content { background: var(--card-bg); padding: 2.5rem; border-radius: 1.5rem; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative; }
-    .modal-header { position: sticky; top: -2.5rem; background: var(--card-bg); padding: 1rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-  </style>
 </head>
 <body id="mainBody">
+
+  <!-- Ambient 3D background canvas -->
+  <canvas id="bg-canvas"></canvas>
 
   <aside class="app-sidebar" id="sidebar">
     <div class="brand">
@@ -30,7 +33,7 @@
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
       <a href="my-reports.html" class="nav-item active"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> <span>My Profile</span></a>
-      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
+      <div style="margin-top:2rem; padding: 0 0.5rem;" id="authLinks"></div>
     </nav>
   </aside>
 
@@ -39,16 +42,35 @@
       <div style="display:flex; align-items:center; gap:1rem;">
         <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
         <div class="welcome-msg">
-          <h1>Clinical History</h1>
-          <p>Access and manage your previously analyzed medical records.</p>
+          <h1>Clinical History & Vault</h1>
+          <p>Access, search, and review your encrypted diagnostic records.</p>
         </div>
       </div>
-      <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleTheme"><i class="ph ph-sun"></i></button>
+        <a href="index.html" class="btn-primary" style="padding:0.5rem 1.25rem; font-size:0.85rem;">
+          <i class="ph ph-plus"></i> New Analysis
+        </a>
+      </div>
     </div>
 
+    <!-- Search & Filter Card -->
+    <div class="card" style="padding:1rem 1.5rem; margin-bottom:1.5rem;">
+      <div style="display:flex; gap:1rem; align-items:center;">
+        <i class="ph ph-magnifying-glass" style="font-size:1.25rem; color:var(--primary);"></i>
+        <input type="text" id="searchInput" placeholder="Search by clinical findings, conditions, or dates..."
+          style="flex:1; background:transparent; border:none; color:var(--text-main); font-size:0.95rem; outline:none;">
+        <span id="reportCount" style="font-size:0.8rem; color:var(--text-muted);">0 records</span>
+      </div>
+    </div>
+
+    <!-- History List -->
     <div class="card">
        <div id="reportsList" style="display:flex; flex-direction:column; gap:1rem;">
-          <p style="color:var(--text-muted); text-align:center; padding:2rem;">Syncing your history...</p>
+          <p style="color:var(--text-muted); text-align:center; padding:3rem;">
+            <i class="ph ph-circle-notch ph-spin" style="font-size:1.75rem; color:var(--primary); display:block; margin-bottom:0.5rem;"></i>
+            Syncing your clinical vault...
+          </p>
        </div>
     </div>
   </main>
@@ -57,11 +79,19 @@
   <div id="reportModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="modalTitle" style="font-size:1.5rem;">Clinical Insight</h2>
-        <button class="icon-btn" id="closeModalBtn"><i class="ph ph-x"></i></button>
+        <div>
+          <span class="hologram-tag" style="margin-bottom:0.35rem;">Encrypted Record</span>
+          <h2 id="modalTitle" style="font-size:1.4rem; color:var(--primary);">Clinical Diagnostic Insight</h2>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn-secondary" id="modalPrintBtn" style="padding:0.4rem 0.85rem; font-size:0.8rem;">
+            <i class="ph ph-printer"></i> Print
+          </button>
+          <button class="icon-btn" id="closeModalBtn"><i class="ph ph-x"></i></button>
+        </div>
       </div>
-      <div id="modalBody" style="line-height:1.6; font-size:1.05rem;">
-        <!-- AI Insight Injected Here -->
+      <div id="modalBody" class="markdown-body">
+        <!-- AI Insight Injected Here via Marked.js -->
       </div>
     </div>
   </div>
@@ -69,6 +99,41 @@
   <script src="js/medi-assistant.js"></script>
   <script>
     const token = localStorage.getItem("token");
+    let allReports = [];
+
+    // Ambient 3D Constellation
+    (function() {
+      const canvas = document.getElementById("bg-canvas");
+      if (!canvas || !window.THREE) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 30;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const pGeo = new THREE.BufferGeometry();
+      const pCount = 200;
+      const pos = new Float32Array(pCount * 3);
+      for (let i = 0; i < pCount * 3; i++) {
+        pos[i] = (Math.random() - 0.5) * 60;
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0x06b6d4, size: 0.25, transparent: true, opacity: 0.5 });
+      const pMesh = new THREE.Points(pGeo, pMat);
+      scene.add(pMesh);
+
+      function anim() {
+        requestAnimationFrame(anim);
+        pMesh.rotation.y += 0.0008;
+        renderer.render(scene, camera);
+      }
+      anim();
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
 
     async function fetchReports() {
       const list = document.getElementById("reportsList");
@@ -78,33 +143,70 @@
         list.innerHTML = "";
         
         if (data.success && data.reports.length > 0) {
-          data.reports.forEach(r => {
-            const div = document.createElement("div");
-            div.className = "card";
-            div.style.padding = "1.25rem";
-            div.style.marginBottom = "0.5rem";
-            div.style.display = "flex";
-            div.style.justifyContent = "space-between";
-            div.style.alignItems = "center";
-            div.innerHTML = `
-              <div style="display:flex; align-items:center; gap:1.25rem;">
-                <div style="background:rgba(59,130,246,0.1); color:var(--primary); width:48px; height:48px; border-radius:0.75rem; display:flex; align-items:center; justify-content:center;">
-                   <i class="ph ph-file-text" style="font-size:1.5rem;"></i>
-                </div>
-                <div>
-                  <h4 style="margin-bottom:0.25rem;">Medical Analysis</h4>
-                  <p style="font-size:0.8rem; color:var(--text-muted);">Stored on ${new Date(r.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <button class="btn-primary" style="padding:0.5rem 1.25rem; font-size:0.85rem;">Review Report</button>
-            `;
-            div.querySelector("button").onclick = () => showReport(r);
-            list.appendChild(div);
-          });
+          allReports = data.reports;
+          renderReportList(allReports);
         } else {
-          list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:3rem;">No clinical records found in your vault.</p>`;
+          list.innerHTML = `
+            <div style="text-align:center; padding:3.5rem 1rem;">
+              <i class="ph ph-clipboard-text" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+              <h3 style="margin-bottom:0.5rem;">No clinical records found</h3>
+              <p style="color:var(--text-muted); margin-bottom:1.5rem; font-size:0.9rem;">Upload your first lab report or scan on the dashboard.</p>
+              <a href="index.html" class="btn-primary">Analyze Medical Document</a>
+            </div>
+          `;
+          document.getElementById("reportCount").innerText = "0 records";
         }
-      } catch (err) { }
+      } catch (err) {
+        list.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load records.</p>`;
+      }
+    }
+
+    function renderReportList(reports) {
+      const list = document.getElementById("reportsList");
+      list.innerHTML = "";
+      document.getElementById("reportCount").innerText = `${reports.length} record${reports.length === 1 ? '' : 's'}`;
+
+      if (reports.length === 0) {
+        list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem;">No matching records found.</p>`;
+        return;
+      }
+
+      reports.forEach((r, idx) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.style.padding = "1.25rem";
+        div.style.marginBottom = "0.75rem";
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+        div.style.background = "rgba(17, 24, 39, 0.5)";
+
+        // Extract first 120 chars as snippet
+        const preview = r.content.replace(/[#*`]/g, '').slice(0, 110) + "...";
+
+        div.innerHTML = `
+          <div style="display:flex; align-items:center; gap:1.25rem; flex:1;">
+            <div style="background:rgba(6,182,212,0.12); color:var(--primary); width:48px; height:48px; border-radius:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+               <i class="ph ph-file-text" style="font-size:1.5rem;"></i>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+                <h4 style="font-weight:700;">Diagnostic Evaluation #${reports.length - idx}</h4>
+                <span style="font-size:0.75rem; background:rgba(6,182,212,0.15); color:var(--primary); padding:0.15rem 0.5rem; border-radius:1rem;">Verified</span>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.4;">${preview}</p>
+              <span style="font-size:0.75rem; color:#64748b; margin-top:0.35rem; display:inline-block;">
+                <i class="ph ph-calendar"></i> ${new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          </div>
+          <button class="btn-primary" style="padding:0.6rem 1.25rem; font-size:0.85rem; flex-shrink:0;">
+            <i class="ph ph-eye"></i> Review
+          </button>
+        `;
+        div.querySelector("button").onclick = () => showReport(r);
+        list.appendChild(div);
+      });
     }
 
     function showReport(report) {
@@ -112,10 +214,21 @@
       const body = document.getElementById("modalBody");
       const title = document.getElementById("modalTitle");
       
-      title.innerText = "Insight from " + new Date(report.createdAt).toLocaleDateString();
-      body.innerHTML = report.content.replace(/\n/g, '<br>');
+      title.innerText = "Clinical Evaluation • " + new Date(report.createdAt).toLocaleDateString();
+      body.innerHTML = marked.parse(report.content);
       modal.style.display = "flex";
+      modal.classList.add("show");
     }
+
+    // Search input listener
+    document.getElementById("searchInput").oninput = (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allReports.filter(r => 
+        r.content.toLowerCase().includes(q) || 
+        new Date(r.createdAt).toLocaleDateString().toLowerCase().includes(q)
+      );
+      renderReportList(filtered);
+    };
 
     window.onload = () => {
       if (!token) window.location.href = "login.html";
@@ -124,8 +237,12 @@
       const toggleSidebar = document.getElementById("toggleSidebar");
       const toggleTheme = document.getElementById("toggleTheme");
 
-      if (document.documentElement.classList.contains("dark-mode")) {
+      if (localStorage.getItem("theme") === "dark" || !localStorage.getItem("theme")) {
+        document.documentElement.classList.add("dark-mode");
         toggleTheme.innerHTML = '<i class="ph ph-sun"></i>';
+      } else {
+        document.documentElement.classList.remove("dark-mode");
+        toggleTheme.innerHTML = '<i class="ph ph-moon"></i>';
       }
 
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
@@ -145,14 +262,23 @@
       authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
       document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
 
-      document.getElementById("closeModalBtn").onclick = () => document.getElementById("reportModal").style.display = "none";
+      const closeModal = () => {
+        const modal = document.getElementById("reportModal");
+        modal.classList.remove("show");
+        setTimeout(() => modal.style.display = "none", 200);
+      };
+
+      document.getElementById("closeModalBtn").onclick = closeModal;
+      document.getElementById("modalPrintBtn").onclick = () => window.print();
+
       window.onclick = (e) => { 
         const modal = document.getElementById("reportModal");
-        if(e.target == modal) modal.style.display = "none";
-      }
+        if (e.target == modal) closeModal();
+      };
 
       fetchReports();
     };
   </script>
 </body>
 </html>
+

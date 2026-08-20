@@ -2,27 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Appointments - MediBot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointments - MediBot Schedule</title>
   <link rel="stylesheet" href="css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     (function() {
       const theme = localStorage.getItem("theme");
-      if (theme === "dark") document.documentElement.classList.add("dark-mode");
+      if (theme === "dark" || !theme) document.documentElement.classList.add("dark-mode");
     })();
   </script>
-  <style>
-    /* Modal Styles */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-    .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 1.25rem; width: 100%; max-width: 500px; border: 1px solid var(--border-color); }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted); }
-    .form-group input { width: 100%; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-  </style>
 </head>
 <body id="mainBody">
+
+  <!-- Ambient 3D background canvas -->
+  <canvas id="bg-canvas" style="position: fixed; top: 0; left: 0; z-index: -1;"></canvas>
 
   <aside class="app-sidebar" id="sidebar">
     <div class="brand">
@@ -34,7 +31,7 @@
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> <span>Medications</span></a>
       <a href="my-reports.html" class="nav-item"><i class="ph ph-clipboard-text"></i> <span>Clinical History</span></a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> <span>My Profile</span></a>
-      <div style="margin-top:2rem; padding: 0 1rem;" id="authLinks"></div>
+      <div style="margin-top:2rem; padding: 0 0.5rem;" id="authLinks"></div>
     </nav>
   </aside>
 
@@ -43,40 +40,52 @@
       <div style="display:flex; align-items:center; gap:1rem;">
         <button class="icon-btn" id="toggleSidebar"><i class="ph ph-list"></i></button>
         <div class="welcome-msg">
-          <h1>My Appointments</h1>
-          <p>Upcoming consultations and checkups.</p>
+          <h1>Clinical Consultations</h1>
+          <p>Upcoming physician visits, specialist checkups, and diagnostic lab appointments.</p>
         </div>
       </div>
-      <button class="icon-btn" id="toggleTheme"><i class="ph ph-moon"></i></button>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button class="icon-btn" id="toggleTheme"><i class="ph ph-sun"></i></button>
+        <button class="btn-primary" id="openModalBtn">
+          <i class="ph ph-calendar-plus"></i> Schedule Consultation
+        </button>
+      </div>
     </div>
 
     <div class="card">
        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-          <h2 style="font-size:1.2rem;">Calendar Schedule</h2>
-          <button class="btn-primary" id="openModalBtn">+ Schedule New</button>
+          <h2 style="font-size:1.25rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:0.5rem;">
+            <i class="ph ph-calendar-blank"></i> Scheduled Timeline
+          </h2>
        </div>
        
-       <div id="appointmentsList">
-          <p style="color:var(--text-muted); text-align:center; padding:2rem;">Fetching your schedule...</p>
+       <div id="appointmentsList" style="display:flex; flex-direction:column; gap:0.85rem;">
+          <p style="color:var(--text-muted); text-align:center; padding:3rem;">
+            <i class="ph ph-circle-notch ph-spin" style="font-size:1.75rem; color:var(--primary); display:block; margin-bottom:0.5rem;"></i>
+            Fetching your consultations...
+          </p>
        </div>
     </div>
   </main>
 
   <!-- Appointment Modal -->
   <div id="aptModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:550px;">
       <div class="modal-header">
-        <h2 style="font-size:1.25rem;">New Appointment</h2>
+        <div>
+          <span class="hologram-tag" style="margin-bottom:0.35rem;">Calendar Sync</span>
+          <h2 style="font-size:1.35rem; color:var(--primary);">New Medical Consultation</h2>
+        </div>
         <button class="icon-btn" id="closeModalBtn"><i class="ph ph-x"></i></button>
       </div>
       <form id="aptForm">
         <div class="form-group">
-          <label>Appointment Title</label>
-          <input type="text" id="aptTitle" placeholder="e.g. Annual Checkup" required>
+          <label>Consultation Title</label>
+          <input type="text" id="aptTitle" placeholder="e.g. Annual Cardiovascular Checkup" required>
         </div>
         <div class="form-group">
-          <label>Doctor Name</label>
-          <input type="text" id="aptDoctor" placeholder="e.g. Dr. Smith" required>
+          <label>Physician / Specialist Name</label>
+          <input type="text" id="aptDoctor" placeholder="e.g. Dr. Sarah Jenkins (Cardiology)" required>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
           <div class="form-group">
@@ -89,10 +98,12 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Location</label>
-          <input type="text" id="aptLocation" placeholder="e.g. City General Hospital">
+          <label>Hospital / Clinic Location</label>
+          <input type="text" id="aptLocation" placeholder="e.g. City General Hospital, Suite 402">
         </div>
-        <button type="submit" class="btn-primary" style="width:100%; margin-top:1rem;">Save Appointment</button>
+        <button type="submit" class="btn-primary" style="width:100%; margin-top:1rem;">
+          <i class="ph ph-check-circle"></i> Save Consultation
+        </button>
       </form>
     </div>
   </div>
@@ -101,55 +112,119 @@
   <script>
     const token = localStorage.getItem("token");
 
-    async function fetchAppointments() {
+    // 3D Background
+    (function() {
+      const canvas = document.getElementById("bg-canvas");
+      if (!canvas || !window.THREE) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 30;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const pGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(150 * 3);
+      for (let i = 0; i < 150 * 3; i++) pos[i] = (Math.random() - 0.5) * 60;
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0x06b6d4, size: 0.25, transparent: true, opacity: 0.4 });
+      const pMesh = new THREE.Points(pGeo, pMat);
+      scene.add(pMesh);
+
+      function anim() {
+        requestAnimationFrame(anim);
+        pMesh.rotation.y += 0.0006;
+        renderer.render(scene, camera);
+      }
+      anim();
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    async function loadAppointments() {
       const list = document.getElementById("appointmentsList");
       try {
         const res = await fetch("/appointments", { headers: { "Authorization": token } });
         const data = await res.json();
+        list.innerHTML = "";
         
         if (data.success && data.appointments.length > 0) {
-          list.innerHTML = data.appointments.map(a => `
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding: 1rem;">
-               <div style="display:flex; align-items:center; gap:1rem;">
-                  <div style="background:rgba(59,130,246,0.1); color:var(--primary); width:50px; height:50px; border-radius:1rem; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-                     <span style="font-size:0.7rem; font-weight:800; text-transform:uppercase;">${new Date(a.date).toLocaleString('default', { month: 'short' })}</span>
-                     <span style="font-size:1.1rem; font-weight:800; margin-top:-2px;">${new Date(a.date).getDate()}</span>
-                  </div>
-                  <div>
-                    <h4 style="margin-bottom:0.2rem;">${a.title}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted);">${a.doctor} • ${a.time} • ${a.location || 'Online'}</p>
-                  </div>
-               </div>
-               <button class="icon-btn" onclick="deleteApt('${a._id}')" style="color:var(--danger); border-color:transparent; background:transparent;">
-                  <i class="ph ph-trash"></i>
-               </button>
-            </div>
-          `).join('');
+          data.appointments.forEach(apt => {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.style.padding = "1.25rem";
+            div.style.marginBottom = "0";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.style.alignItems = "center";
+            div.style.background = "rgba(17, 24, 39, 0.5)";
+
+            div.innerHTML = `
+              <div style="display:flex; align-items:center; gap:1.25rem;">
+                <div style="background:rgba(6,182,212,0.12); color:var(--primary); width:50px; height:50px; border-radius:0.85rem; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                   <i class="ph ph-calendar-check" style="font-size:1.5rem;"></i>
+                </div>
+                <div>
+                  <h4 style="font-weight:700; font-size:1.05rem; margin-bottom:0.25rem;">${apt.title}</h4>
+                  <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.25rem;">
+                    <i class="ph ph-user-circle"></i> ${apt.doctor} • <i class="ph ph-map-pin"></i> ${apt.location || 'Clinical Clinic'}
+                  </p>
+                  <span style="font-size:0.8rem; color:var(--primary); font-weight:600;">
+                    <i class="ph ph-clock"></i> ${apt.date} at ${apt.time}
+                  </span>
+                </div>
+              </div>
+              <button class="icon-btn" style="color:var(--danger); border-color:rgba(244,63,94,0.3);" title="Cancel Appointment">
+                <i class="ph ph-trash"></i>
+              </button>
+            `;
+
+            div.querySelector("button").onclick = () => deleteAppointment(apt._id);
+            list.appendChild(div);
+          });
         } else {
-          list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem;">No appointments scheduled.</p>`;
+          list.innerHTML = `
+            <div style="text-align:center; padding:3rem 1rem;">
+              <i class="ph ph-calendar-x" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+              <h3 style="margin-bottom:0.5rem;">No Consultations Scheduled</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem;">Schedule upcoming clinical visits to keep track of medical consultations.</p>
+            </div>
+          `;
         }
       } catch (err) {
         list.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load schedule.</p>`;
       }
     }
 
-    async function deleteApt(id) {
-      if(!confirm("Are you sure you want to cancel this appointment?")) return;
-      await fetch(`/appointments/${id}`, { method: 'DELETE', headers: { "Authorization": token } });
-      fetchAppointments();
+    async function deleteAppointment(id) {
+      if (!confirm("Are you sure you want to cancel this consultation?")) return;
+      try {
+        const res = await fetch(`/appointments/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": token }
+        });
+        const data = await res.json();
+        if (data.success) loadAppointments();
+      } catch (e) {
+        alert("Error deleting appointment.");
+      }
     }
 
     window.onload = () => {
       if (!token) window.location.href = "login.html";
 
-      const body = document.getElementById("mainBody");
       const sidebar = document.getElementById("sidebar");
       const toggleSidebar = document.getElementById("toggleSidebar");
       const toggleTheme = document.getElementById("toggleTheme");
 
-      // Set initial Icons
-      if (document.documentElement.classList.contains("dark-mode")) {
+      if (localStorage.getItem("theme") === "dark" || !localStorage.getItem("theme")) {
+        document.documentElement.classList.add("dark-mode");
         toggleTheme.innerHTML = '<i class="ph ph-sun"></i>';
+      } else {
+        document.documentElement.classList.remove("dark-mode");
+        toggleTheme.innerHTML = '<i class="ph ph-moon"></i>';
       }
 
       if (localStorage.getItem("sidebar") === "collapsed") sidebar.classList.add("collapsed");
@@ -169,38 +244,51 @@
       authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
       document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
 
-      // Modal Logic
+      // Modal Controls
       const modal = document.getElementById("aptModal");
-      document.getElementById("openModalBtn").onclick = () => modal.style.display = "flex";
-      document.getElementById("closeModalBtn").onclick = () => modal.style.display = "none";
-      window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; };
+      const openBtn = document.getElementById("openModalBtn");
+      const closeBtn = document.getElementById("closeModalBtn");
 
-      // Form Logic
+      openBtn.onclick = () => {
+        modal.style.display = "flex";
+      };
+
+      const closeModal = () => {
+        modal.style.display = "none";
+      };
+
+      closeBtn.onclick = closeModal;
+      window.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+      // Form Submit
       document.getElementById("aptForm").onsubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-          title: document.getElementById("aptTitle").value,
-          doctor: document.getElementById("aptDoctor").value,
-          date: document.getElementById("aptDate").value,
-          time: document.getElementById("aptTime").value,
-          location: document.getElementById("aptLocation").value
-        };
+        const title = document.getElementById("aptTitle").value;
+        const doctor = document.getElementById("aptDoctor").value;
+        const date = document.getElementById("aptDate").value;
+        const time = document.getElementById("aptTime").value;
+        const location = document.getElementById("aptLocation").value;
 
-        const res = await fetch("/appointments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": token },
-          body: JSON.stringify(payload)
-        });
-        
-        const data = await res.json();
-        if(data.success) {
-          modal.style.display = "none";
-          document.getElementById("aptForm").reset();
-          fetchAppointments();
+        try {
+          const res = await fetch("/appointments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({ title, doctor, date, time, location })
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeModal();
+            document.getElementById("aptForm").reset();
+            loadAppointments();
+          } else {
+            alert(data.message || "Failed to schedule appointment.");
+          }
+        } catch (err) {
+          alert("Error connecting to server.");
         }
       };
 
-      fetchAppointments();
+      loadAppointments();
     };
   </script>
 </body>
