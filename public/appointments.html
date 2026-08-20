@@ -242,28 +242,52 @@
       };
 
       const authLinks = document.getElementById("authLinks");
-      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
-      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+      authLinks.innerHTML = `<a href="logout.html" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
 
       // Modal Controls
       const modal = document.getElementById("aptModal");
       const openBtn = document.getElementById("openModalBtn");
       const closeBtn = document.getElementById("closeModalBtn");
 
-      openBtn.onclick = () => {
+      function openModal() {
+        if (!modal) return;
         modal.style.display = "flex";
-      };
+        requestAnimationFrame(() => modal.classList.add("show"));
+        setTimeout(() => {
+          const firstInput = document.getElementById("aptTitle");
+          if (firstInput) firstInput.focus();
+        }, 100);
+      }
 
-      const closeModal = () => {
-        modal.style.display = "none";
-      };
+      function closeModal() {
+        if (!modal) return;
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 200);
+      }
 
-      closeBtn.onclick = closeModal;
+      if (openBtn) openBtn.onclick = openModal;
+      if (closeBtn) closeBtn.onclick = closeModal;
+
       window.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+          closeModal();
+        }
+      });
 
       // Form Submit
       document.getElementById("aptForm").onsubmit = async (e) => {
         e.preventDefault();
+        const submitBtn = e.target.querySelector("button[type='submit']");
+        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="ph ph-circle-notch ph-spin"></i> Scheduling...';
+        }
+
         const title = document.getElementById("aptTitle").value;
         const doctor = document.getElementById("aptDoctor").value;
         const date = document.getElementById("aptDate").value;
@@ -286,6 +310,11 @@
           }
         } catch (err) {
           alert("Error connecting to server.");
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+          }
         }
       };
 

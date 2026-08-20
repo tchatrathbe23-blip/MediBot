@@ -127,23 +127,6 @@
       color: var(--primary);
       box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
     }
-
-    .sample-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--glass-border);
-      color: #94a3b8;
-      padding: 0.4rem 0.85rem;
-      border-radius: 0.5rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .sample-btn:hover {
-      background: rgba(6, 182, 212, 0.15);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
   </style>
 </head>
 
@@ -218,17 +201,13 @@
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
           <h2 style="font-size:1.15rem; font-weight:700;">Analyze Medical Document</h2>
-          <div style="display:flex; gap:0.35rem;">
-            <button class="sample-btn" id="loadSample1">Sample Blood Test</button>
-            <button class="sample-btn" id="loadSample2">Sample Lipid Panel</button>
-          </div>
         </div>
 
         <div class="uploader-zone" id="dropZone">
           <i class="ph ph-cloud-arrow-up upload-icon"></i>
           <h3 id="uploadPrompt" style="font-size:1.1rem; margin-bottom:0.35rem;">Drop clinical report here or click to browse</h3>
-          <p style="color: var(--text-muted); font-size:0.85rem;">PDF, DOCX, JPG, PNG blood tests & scans</p>
-          <input type="file" id="fileInput" hidden accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.txt">
+          <p style="color: var(--text-muted); font-size:0.85rem;">PDF, DOCX, JPG, PNG blood tests, prescriptions & scans</p>
+          <input type="file" id="fileInput" hidden accept=".pdf,.docx,.doc,.jpg,.jpeg,.png">
         </div>
 
         <div id="loadingOverlay">
@@ -553,11 +532,7 @@
       document.getElementById("userAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=06b6d4&color=fff`;
 
       const authLinks = document.getElementById("authLinks");
-      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
-      document.getElementById("logoutBtn").onclick = () => {
-        localStorage.clear();
-        window.location.href = "login.html";
-      };
+      authLinks.innerHTML = `<a href="logout.html" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
 
       // Upload & Analysis Elements
       const analyzeBtn = document.getElementById("analyzeBtn");
@@ -599,41 +574,6 @@
         analyzeBtn.disabled = false;
         playBeep(880, 'sine', 0.1);
       }
-
-      // Sample Loaders
-      document.getElementById("loadSample1").onclick = () => {
-        const sampleText = `PATIENT CLINICAL LAB REPORT
-Name: Demo Patient | Age: 44 | Sex: Male
-Test Panel: Comprehensive Metabolic & Lipid Panel
-- Hemoglobin: 11.2 g/dL [Normal Range: 13.5 - 17.5 g/dL] (LOW - Flagged)
-- Fasting Blood Glucose: 142 mg/dL [Normal: 70 - 99 mg/dL] (HIGH - Flagged)
-- Total Cholesterol: 248 mg/dL [Desirable: < 200 mg/dL] (HIGH - Flagged)
-- LDL Cholesterol: 162 mg/dL [Optimal: < 100 mg/dL] (HIGH - Flagged)
-- HDL Cholesterol: 38 mg/dL [Optimal: > 40 mg/dL] (LOW - Flagged)
-- Triglycerides: 210 mg/dL [Normal: < 150 mg/dL] (HIGH - Flagged)
-- Serum Creatinine: 1.05 mg/dL [Normal: 0.7 - 1.3 mg/dL] (Normal)
-- eGFR: 88 mL/min/1.73m2 (Normal)
-Notes: Patient presents with fatigue and increased thirst.`;
-
-        const blob = new Blob([sampleText], { type: "text/plain" });
-        const file = new File([blob], "Comprehensive_Metabolic_Report.txt", { type: "text/plain" });
-        selectFile(file);
-      };
-
-      document.getElementById("loadSample2").onclick = () => {
-        const sampleText = `CARDIAC & INFLAMMATORY MARKERS REPORT
-Patient: Demo Patient | Age: 52
-- hs-CRP (High-Sensitivity C-Reactive Protein): 3.8 mg/L [Low Risk: < 1.0 mg/L] (HIGH)
-- Total Cholesterol: 235 mg/dL [Normal: < 200 mg/dL] (HIGH)
-- Systolic BP Recorded: 138 mmHg [Normal: < 120 mmHg] (ELEVATED)
-- Diastolic BP Recorded: 88 mmHg [Normal: < 80 mmHg] (ELEVATED)
-- HbA1c: 6.2% [Pre-Diabetes: 5.7 - 6.4%] (ELEVATED)
-- Vitamin D (25-OH): 18 ng/mL [Optimal: 30 - 100 ng/mL] (DEFICIENT)`;
-
-        const blob = new Blob([sampleText], { type: "text/plain" });
-        const file = new File([blob], "Cardiac_Inflammation_Panel.txt", { type: "text/plain" });
-        selectFile(file);
-      };
 
       // Analyze Trigger
       analyzeBtn.onclick = async () => {

@@ -1,23 +1,23 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Report Details - MediBot</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    /* --- CSS Reset & Variables --- */
     :root {
       --bg-sidebar: #0f172a;
       --bg-main: #020617;
-      --primary: #a855f7;
-      --primary-hover: #9333ea;
+      --primary: #06b6d4;
+      --primary-hover: #0891b2;
       --secondary: #1e293b;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --danger: #ef4444;
-      --card-bg: #0f172a;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --danger: #f43f5e;
+      --card-bg: rgba(17, 24, 39, 0.75);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +31,6 @@
       overflow: hidden;
     }
 
-    /* --- SIDEBAR --- */
     .app-sidebar {
       width: 260px;
       background-color: var(--bg-sidebar);
@@ -51,10 +50,10 @@
       font-size: 1.25rem;
       font-weight: 700;
       margin-bottom: 2rem;
-      color: white;
+      color: var(--primary);
     }
     .brand-icon {
-      background: white;
+      background: var(--primary);
       color: var(--bg-main);
       border-radius: 50%;
       width: 32px;
@@ -115,7 +114,7 @@
     .nav-item.active {
       background-color: var(--primary);
       color: white;
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
     }
 
     .nav-footer {
@@ -126,7 +125,6 @@
       gap: 0.5rem;
     }
 
-    /* --- MAIN CONTENT --- */
     .app-main {
       flex: 1;
       overflow-y: auto;
@@ -138,20 +136,24 @@
 
     .page-header {
       margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .page-header h1 {
       font-size: 1.75rem;
       font-weight: 700;
       color: var(--primary);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .box {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      padding: 2rem;
+      padding: 1.75rem;
       border-radius: 1rem;
       margin-bottom: 1.5rem;
+      backdrop-filter: blur(20px);
     }
 
     .box h2 {
@@ -159,10 +161,32 @@
       margin-bottom: 1rem;
       font-size: 1.2rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     ul { padding-left: 1.5rem; }
     li { margin-bottom: 0.5rem; line-height: 1.6; color: var(--text-muted); }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -170,91 +194,88 @@
   <!-- LEFT SIDEBAR -->
   <aside class="app-sidebar">
     <div class="brand">
-      <div class="brand-icon"><i class="ph ph-robot"></i></div>
+      <div class="brand-icon"><i class="ph ph-heartbeat"></i></div>
       MediBot
     </div>
 
     <div class="user-profile">
-      <img src="https://ui-avatars.com/api/?name=User&background=a855f7&color=fff" alt="User Profile">
+      <img src="https://ui-avatars.com/api/?name=User&background=06b6d4&color=fff" alt="User Profile" id="profileAvatar">
       <div class="user-info">
-        <h4>Demo User</h4>
-        <span>Report Detail</span>
+        <h4 id="sidebarUserName">Patient Profile</h4>
+        <span>Clinical Record</span>
       </div>
     </div>
 
     <nav class="nav-menu">
-      <a href="index.html" class="nav-item"><i class="ph ph-file-text"></i> Summary Tool</a>
+      <a href="index.html" class="nav-item"><i class="ph ph-grid-four"></i> Dashboard</a>
       <a href="appointments.html" class="nav-item"><i class="ph ph-calendar"></i> Appointments</a>
       <a href="medications.html" class="nav-item"><i class="ph ph-pill"></i> Medications</a>
-      <a href="my-reports.html" class="nav-item"><i class="ph ph-clock-counter-clockwise"></i> History / Reports</a>
+      <a href="my-reports.html" class="nav-item active"><i class="ph ph-clipboard-text"></i> History / Reports</a>
       <a href="profile.html" class="nav-item"><i class="ph ph-user"></i> My Profile</a>
       <a href="feedback.html" class="nav-item"><i class="ph ph-chat-centered-text"></i> Feedback</a>
-      <a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>
+      <a href="logout.html" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> Logout</a>
     </nav>
-
-    <div class="nav-footer">
-      <a href="#" class="nav-item"><i class="ph ph-sun"></i> Light Mode</a>
-      <a href="#" class="nav-item" style="color: var(--danger);" id="logoutSidebar"><i class="ph ph-sign-out"></i> Sign Out</a>
-    </div>
   </aside>
 
   <main class="app-main">
     <div class="page-header">
-      <h1>Report Details</h1>
-      <p>In-depth analysis of your medical document</p>
+      <div>
+        <h1>Report Details</h1>
+        <p style="color:var(--text-muted); font-size:0.9rem;">In-depth analysis of your medical document</p>
+      </div>
+      <a href="my-reports.html" class="back-btn"><i class="ph ph-arrow-left"></i> Back to Reports</a>
     </div>
 
     <div id="report"></div>
   </main>
 
 <script>
-  // Backend URL (for future API calls)
-  const API_BASE = "";
-
   window.onload = function() {
-      // Logout logic
-      const logoutSidebar = document.getElementById("logoutSidebar");
-      if (logoutSidebar) {
-        logoutSidebar.addEventListener("click", (e) => {
-          e.preventDefault();
-          localStorage.removeItem("token");
-          localStorage.removeItem("name");
-          window.location.href = "landing.html";
-        });
-      }
-
-      // User profile update
-      const userNameDisplay = document.querySelector(".user-info h4");
-      const storedName = localStorage.getItem("name");
-      if (userNameDisplay && storedName) {
-        userNameDisplay.textContent = storedName;
-        const profileImg = document.querySelector(".user-profile img");
-        if (profileImg) profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=a855f7&color=fff`;
-      }
+    const userNameDisplay = document.getElementById("sidebarUserName");
+    const storedName = localStorage.getItem("name");
+    if (userNameDisplay && storedName) {
+      userNameDisplay.textContent = storedName;
+      const profileImg = document.getElementById("profileAvatar");
+      if (profileImg) profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedName)}&background=06b6d4&color=fff`;
+    }
   };
 
-  // Load selected report from localStorage
-  const data = JSON.parse(localStorage.getItem("selectedReport"));
+  const rawData = localStorage.getItem("selectedReport");
+  let data = null;
+  try {
+    data = rawData ? JSON.parse(rawData) : null;
+  } catch (e) {
+    data = null;
+  }
 
   if (!data) {
     document.getElementById("report").innerHTML = 
-      "<div class='box'>No report data found.</div>";
+      "<div class='box'><p style='color:var(--text-muted);'>No report data found. Please select a report from Clinical History.</p></div>";
   } else {
     let html = `
       <div class="box">
-        <h2>Summary</h2>${data.summary}
-      </div>
-
-      <div class="box">
-        <h2>Possible Issues</h2>
-        <ul>${data.possibleIssues.map(i => `<li>${i}</li>`).join("")}</ul>
-      </div>
-
-      <div class="box">
-        <h2>Recommendations</h2>
-        <ul>${data.recommendations.map(r => `<li>${r}</li>`).join("")}</ul>
+        <h2><i class="ph ph-file-text"></i> Summary</h2>
+        <div style="line-height:1.7; color:var(--text-main);">${typeof data === 'string' ? data : (data.summary || data.content || JSON.stringify(data))}</div>
       </div>
     `;
+
+    if (data.possibleIssues && Array.isArray(data.possibleIssues) && data.possibleIssues.length > 0) {
+      html += `
+        <div class="box">
+          <h2><i class="ph ph-warning-circle"></i> Potential Biomarker Flags</h2>
+          <ul>${data.possibleIssues.map(i => `<li>${i}</li>`).join("")}</ul>
+        </div>
+      `;
+    }
+
+    if (data.recommendations && Array.isArray(data.recommendations) && data.recommendations.length > 0) {
+      html += `
+        <div class="box">
+          <h2><i class="ph ph-sparkle"></i> Clinical Next Steps & Regimen</h2>
+          <ul>${data.recommendations.map(r => `<li>${r}</li>`).join("")}</ul>
+        </div>
+      `;
+    }
 
     document.getElementById("report").innerHTML = html;
   }

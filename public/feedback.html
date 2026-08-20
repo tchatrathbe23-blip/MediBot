@@ -126,8 +126,7 @@
       };
 
       const authLinks = document.getElementById("authLinks");
-      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
-      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+      authLinks.innerHTML = `<a href="logout.html" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
 
       document.getElementById("submitFeedback").onclick = async () => {
         const fb = document.getElementById("feedbackText").value.trim();

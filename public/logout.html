@@ -1,0 +1,304 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signed Out - MediBot Clinical Vault</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #080c14;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .logout-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 500px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(6, 182, 212, 0.18);
+      margin: 1.5rem;
+    }
+
+    .logout-icon-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logout-icon-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, rgba(6, 182, 212, 0.02) 70%);
+      border-radius: 50%;
+      animation: pulseGlow 2.5s infinite ease-in-out;
+    }
+
+    .logout-icon-circle {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.2));
+      border: 1px solid rgba(6, 182, 212, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 2rem;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 0.35rem 0.85rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 1.25rem;
+    }
+
+    .security-list {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0 2rem 0;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .security-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .security-item i {
+      color: #10b981;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 1.5rem;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #818cf8);
+      width: 100%;
+      transform-origin: left;
+      animation: countdownProgress 7s linear forwards;
+    }
+
+    @keyframes countdownProgress {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    .countdown-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .countdown-note a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .countdown-note a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Ambient 3D Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="logout-card animate-fade-in">
+    <div class="brand" style="justify-content:center; padding:0; margin-bottom:1.5rem;">
+      <i class="ph ph-heartbeat"></i> <span>MediBot</span>
+    </div>
+
+    <div class="logout-icon-wrapper">
+      <div class="logout-icon-bg"></div>
+      <div class="logout-icon-circle">
+        <i class="ph ph-shield-check"></i>
+      </div>
+    </div>
+
+    <div class="security-badge">
+      <i class="ph ph-lock-key"></i> Session Safely Terminated
+    </div>
+
+    <h1 style="font-size:1.6rem; font-weight:800; margin-bottom:0.5rem; color:#ffffff;">
+      You've Been Signed Out
+    </h1>
+    <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+      Thank you for using MediBot. Your clinical records and diagnostic session tokens have been securely flushed from this browser.
+    </p>
+
+    <div class="security-list">
+      <div class="security-item">
+        <i class="ph ph-check-circle"></i>
+        <span>Session authentication credentials cleared</span>
+      </div>
+      <div class="security-item">
+        <i class="ph ph-check-circle"></i>
+        <span>Local diagnostic document cache purged</span>
+      </div>
+      <div class="security-item">
+        <i class="ph ph-check-circle"></i>
+        <span>Encrypted clinical vault locked</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+      <a href="login.html" class="btn-primary" style="text-decoration:none; justify-content:center; padding:0.85rem 1.5rem; font-size:0.95rem;">
+        <i class="ph ph-sign-in"></i> Sign In Again
+      </a>
+      <a href="landing.html" class="btn-secondary" style="text-decoration:none; justify-content:center; padding:0.75rem 1.5rem; font-size:0.9rem;">
+        <i class="ph ph-house"></i> Return to Homepage
+      </a>
+    </div>
+
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="countdown-note">
+      <span id="countdownText">Redirecting to login in <b id="timerNum" style="color:var(--text-main);">7</b>s...</span>
+      <a id="pauseBtn" onclick="toggleAutoRedirect()">Pause</a>
+    </div>
+  </div>
+
+  <script>
+    // Flush all local authentication state
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 3D Ambient Canvas Background
+    (function() {
+      const canvas = document.getElementById("bg-canvas");
+      if (!canvas || !window.THREE) return;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 30;
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const pGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(150 * 3);
+      for (let i = 0; i < 150 * 3; i++) pos[i] = (Math.random() - 0.5) * 60;
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pMat = new THREE.PointsMaterial({ color: 0x06b6d4, size: 0.25, transparent: true, opacity: 0.45 });
+      const pMesh = new THREE.Points(pGeo, pMat);
+      scene.add(pMesh);
+
+      function anim() {
+        requestAnimationFrame(anim);
+        pMesh.rotation.y += 0.0007;
+        pMesh.rotation.x += 0.0003;
+        renderer.render(scene, camera);
+      }
+      anim();
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    // Auto-Redirect Countdown
+    let timeLeft = 7;
+    let isPaused = false;
+    const timerNum = document.getElementById("timerNum");
+    const progressFill = document.getElementById("progressFill");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const countdownText = document.getElementById("countdownText");
+
+    const timer = setInterval(() => {
+      if (isPaused) return;
+      timeLeft--;
+      if (timerNum) timerNum.innerText = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        window.location.href = "login.html";
+      }
+    }, 1000);
+
+    function toggleAutoRedirect() {
+      isPaused = !isPaused;
+      if (isPaused) {
+        pauseBtn.innerText = "Resume";
+        if (progressFill) progressFill.style.animationPlayState = "paused";
+        countdownText.innerHTML = "Auto-redirect paused";
+      } else {
+        pauseBtn.innerText = "Pause";
+        if (progressFill) progressFill.style.animationPlayState = "running";
+        countdownText.innerHTML = `Redirecting to login in <b id="timerNum" style="color:var(--text-main);">${timeLeft}</b>s...`;
+      }
+    }
+  </script>
+</body>
+</html>

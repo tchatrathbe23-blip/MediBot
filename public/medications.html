@@ -185,11 +185,18 @@
         } else {
           list.innerHTML = `
             <div style="text-align:center; padding:3rem 1rem;">
-              <i class="ph ph-pill" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+              <i class="ph ph-pill" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem; display:block;"></i>
               <h3 style="margin-bottom:0.5rem;">No Active Medications Tracked</h3>
-              <p style="color:var(--text-muted); font-size:0.9rem;">Add current prescriptions to track dosages and receive advice.</p>
+              <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Add current prescriptions to track dosages and receive advice.</p>
+              <button class="btn-primary" id="emptyStateAddBtn" style="margin: 0 auto; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="ph ph-plus-circle"></i> Add Prescription
+              </button>
             </div>
           `;
+          const emptyBtn = document.getElementById("emptyStateAddBtn");
+          if (emptyBtn) {
+            emptyBtn.onclick = () => openModal();
+          }
         }
       } catch (err) {
         list.innerHTML = `<p style="color:var(--danger); text-align:center;">Failed to load medications.</p>`;
@@ -208,6 +215,29 @@
       } catch (e) {
         alert("Error deleting medication.");
       }
+    }
+
+    // Modal Helpers
+    function openModal() {
+      const modal = document.getElementById("medModal");
+      if (!modal) return;
+      modal.style.display = "flex";
+      requestAnimationFrame(() => {
+        modal.classList.add("show");
+      });
+      setTimeout(() => {
+        const firstInput = document.getElementById("medName");
+        if (firstInput) firstInput.focus();
+      }, 100);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("medModal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      setTimeout(() => {
+        modal.style.display = "none";
+      }, 200);
     }
 
     window.onload = () => {
@@ -239,32 +269,40 @@
       };
 
       const authLinks = document.getElementById("authLinks");
-      authLinks.innerHTML = `<a href="#" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
-      document.getElementById("logoutBtn").onclick = () => { localStorage.clear(); window.location.href = "login.html"; };
+      authLinks.innerHTML = `<a href="logout.html" class="nav-item" id="logoutBtn" style="color:var(--danger)"><i class="ph ph-sign-out"></i> <span>Logout</span></a>`;
 
       // Modal Controls
       const modal = document.getElementById("medModal");
       const openBtn = document.getElementById("openModalBtn");
       const closeBtn = document.getElementById("closeModalBtn");
 
-      openBtn.onclick = () => {
-        modal.style.display = "flex";
+      if (openBtn) openBtn.onclick = openModal;
+      if (closeBtn) closeBtn.onclick = closeModal;
+
+      window.onclick = (e) => {
+        if (e.target === modal) closeModal();
       };
 
-      const closeModal = () => {
-        modal.style.display = "none";
-      };
-
-      closeBtn.onclick = closeModal;
-      window.onclick = (e) => { if (e.target === modal) closeModal(); };
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+          closeModal();
+        }
+      });
 
       // Form Submit
       document.getElementById("medForm").onsubmit = async (e) => {
         e.preventDefault();
-        const name = document.getElementById("medName").value;
-        const dosage = document.getElementById("medDosage").value;
-        const schedule = document.getElementById("medSchedule").value;
-        const notes = document.getElementById("medNotes").value;
+        const submitBtn = e.target.querySelector("button[type='submit']");
+        const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="ph ph-circle-notch ph-spin"></i> Saving...';
+        }
+
+        const name = document.getElementById("medName").value.trim();
+        const dosage = document.getElementById("medDosage").value.trim();
+        const schedule = document.getElementById("medSchedule").value.trim();
+        const notes = document.getElementById("medNotes").value.trim();
 
         try {
           const res = await fetch("/medications", {
@@ -282,6 +320,11 @@
           }
         } catch (err) {
           alert("Error connecting to server.");
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+          }
         }
       };
 
